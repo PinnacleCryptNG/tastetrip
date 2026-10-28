@@ -4,7 +4,7 @@
 
 Built for the **Qloo Agentic Hackathon** (Oct 2026).
 
-- **Live:** LIVE_URL
+- **Live:** https://tastetrip-silk.vercel.app
 - **License:** [MIT](LICENSE)
 
 ## The problem
