@@ -19,8 +19,8 @@ export const viewport: Viewport = { themeColor: "#f7f4ee", width: "device-width"
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body className={`${sans.variable} ${display.variable} ${mono.variable} min-h-dvh antialiased`}>{children}</body>
+    <html lang="en" className={`${sans.variable} ${display.variable} ${mono.variable}`}>
+      <body className="min-h-dvh antialiased">{children}</body>
     </html>
   );
 }

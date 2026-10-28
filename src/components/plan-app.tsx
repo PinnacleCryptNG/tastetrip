@@ -159,7 +159,7 @@ export function PlanApp() {
       </div>
       <div>
         <label htmlFor="date" className="text-sm font-bold">Start date <span className="font-normal text-muted-foreground">(optional, picks places open that day)</span></label>
-        <input id="date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="mt-2 h-12 w-full rounded-xl border border-input bg-card px-4 text-[15px] shadow-sm outline-none focus:border-primary focus:ring-3 focus:ring-primary/15 sm:w-56" />
+        <input id="date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="mt-2 block h-12 w-full rounded-xl border border-input bg-card px-4 text-[15px] shadow-sm outline-none focus:border-primary focus:ring-3 focus:ring-primary/15 sm:w-56" />
       </div>
       <div>
         <div className="flex items-baseline justify-between">
