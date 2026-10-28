@@ -31,6 +31,7 @@ export function PlanApp() {
   const router = useRouter();
   const [city, setCity] = useState("");
   const [days, setDays] = useState(2);
+  const [custom, setCustom] = useState(false);
   const [budget, setBudget] = useState<number | undefined>(undefined);
   const [startDate, setStartDate] = useState("");
   const [seeds, setSeeds] = useState<TasteSeed[]>([]);
@@ -69,6 +70,7 @@ export function PlanApp() {
       setSeeds(found.filter((x): x is TasteSeed => !!x));
       setCity(s.city);
       setDays(s.days);
+      setCustom(s.days > 3);
       setBudget(undefined);
     } catch (e) {
       setError({ msg: (e as Error).message, hint: (e as { hint?: string }).hint });
@@ -199,14 +201,30 @@ export function PlanApp() {
         <div className="tt-dash-x" />
         <div>
           <label htmlFor="city" className="font-mono text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Destination</label>
-          <input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Lisbon, Tokyo, Lagos…" autoComplete="off" className="mt-2 h-12 w-full rounded-md border border-input bg-background px-4 text-[15px] font-semibold outline-none transition placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/15 font-heading text-2xl uppercase placeholder:font-sans placeholder:text-[15px] placeholder:normal-case" />
+          <input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Kyoto, Cape Town, Buenos Aires…" autoComplete="off" className="mt-2 h-12 w-full rounded-md border border-input bg-background px-4 text-[15px] font-semibold outline-none transition placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/15 font-heading text-2xl uppercase placeholder:font-sans placeholder:text-[15px] placeholder:normal-case" />
         </div>
         <div className="grid gap-5 sm:grid-cols-2">
           <div>
             <div className="font-mono text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Duration</div>
             <div className="mt-2">
-              <Segmented label="Days" value={days} onChange={setDays} options={[1, 2, 3].map((v) => ({ v, label: `${v} day${v > 1 ? "s" : ""}` }))} />
+              <Segmented
+                label="Days"
+                value={custom ? 0 : days}
+                onChange={(v) => (v === 0 ? (setCustom(true), setDays((d) => (d > 3 ? d : 5))) : (setCustom(false), setDays(v)))}
+                options={[...[1, 2, 3].map((v) => ({ v, label: `${v} day${v > 1 ? "s" : ""}` })), { v: 0, label: "Custom" }]}
+              />
             </div>
+            {custom && (
+              <div className="mt-2 rounded-md border border-input bg-background p-2">
+                <div className="flex items-center gap-2">
+                  <button type="button" aria-label="One day fewer" onClick={() => setDays((d) => Math.max(1, d - 1))} className="grid size-9 shrink-0 place-items-center rounded-[5px] bg-[#0b0d17] font-mono text-lg font-bold text-[#ffd23f]">−</button>
+                  <input type="range" min={1} max={30} value={days} onChange={(e) => setDays(+e.target.value)} aria-label="Trip length in days" className="h-9 min-w-0 flex-1 accent-[#2f3cff]" />
+                  <button type="button" aria-label="One day more" onClick={() => setDays((d) => Math.min(30, d + 1))} className="grid size-9 shrink-0 place-items-center rounded-[5px] bg-[#0b0d17] font-mono text-lg font-bold text-[#ffd23f]">+</button>
+                  <output className="w-[4.5rem] shrink-0 text-right font-heading text-2xl leading-none font-extrabold uppercase">{days}<span className="ml-1 font-mono text-[10px] tracking-[0.1em] text-muted-foreground">{days > 1 ? "days" : "day"}</span></output>
+                </div>
+                <p className="mt-1.5 px-1 font-mono text-[10px] tracking-[0.06em] text-muted-foreground">Up to 30 days.{days > 7 ? " Long trips take a minute or two to plan." : ""}</p>
+              </div>
+            )}
           </div>
           <div>
             <div className="font-mono text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Class <span className="normal-case tracking-normal font-normal">· food &amp; drink budget</span></div>

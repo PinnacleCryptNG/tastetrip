@@ -12,9 +12,9 @@ async function font(family: string, weight: number) {
 }
 
 const ROWS = [
-  ["WIZKID", "TOKYO", "92%"],
-  ["BURNA BOY", "LISBON", "89%"],
-  ["GILMORE GIRLS", "NEW YORK", "87%"],
+  ["FRANK OCEAN", "PARIS", "92%"],
+  ["BTS", "SEOUL", "94%"],
+  ["BLACK COFFEE", "CAPE TOWN", "91%"],
 ];
 
 function Flaps({ text, n, color = "#ffd23f" }: { text: string; n: number; color?: string }) {

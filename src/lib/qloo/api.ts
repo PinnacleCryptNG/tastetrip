@@ -67,6 +67,7 @@ export type PlaceQuery = {
   priceMax?: number;
   exclude?: string[];
   take?: number;
+  page?: number;
   relaxed?: boolean;
 };
 
@@ -83,6 +84,7 @@ export function insightsParams(q: PlaceQuery): QlooParams {
     "bias.quality": q.relaxed ? undefined : "medium",
     "feature.explainability": true,
     take: Math.min(50, q.take ?? 15),
+    page: q.page && q.page > 1 ? q.page : undefined,
   };
 }
 
@@ -95,7 +97,8 @@ export async function recommendPlaces(q: PlaceQuery): Promise<{
 }> {
   let calls = 0;
   let cachedAll = true;
-  for (const relaxed of [false, true]) {
+  const later = !!q.page && q.page > 1;
+  for (const relaxed of later ? [!!q.relaxed] : [false, true]) {
     const { data, cached } = await qlooGet("/v2/insights", insightsParams({ ...q, relaxed }));
     calls++;
     cachedAll &&= cached;
@@ -105,7 +108,7 @@ export async function recommendPlaces(q: PlaceQuery): Promise<{
       .map((e) => normalizePlace(e, q.seedIds))
       .filter((c): c is Candidate => c !== null);
     const loc = (parsed.data.query as { locality?: { signal?: { name?: string } } } | undefined)?.locality?.signal;
-    if (places.length >= 3 || relaxed) return { places, matchedCity: loc?.name, cached: cachedAll, calls, relaxed };
+    if (places.length >= 3 || relaxed || later) return { places, matchedCity: loc?.name, cached: cachedAll, calls, relaxed };
   }
   return { places: [], cached: cachedAll, calls, relaxed: true };
 }

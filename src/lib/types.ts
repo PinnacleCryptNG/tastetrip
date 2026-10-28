@@ -97,7 +97,7 @@ export type PublicTrip = Trip;
 
 export const PlanInputSchema = z.object({
   city: z.string().trim().min(2).max(80),
-  days: z.number().int().min(1).max(3),
+  days: z.number().int().min(1).max(30),
   budget: z.number().int().min(1).max(4).optional(),
   startDate: z
     .string()

@@ -8,7 +8,7 @@ import { Stamp } from "@/components/stamp";
 
 const REPO = "https://github.com/PinnacleCryptNG/tastetrip";
 const d = (ms: number) => ({ "--d": `${ms}ms` }) as React.CSSProperties;
-const CITIES = ["Lisbon", "Tokyo", "Lagos", "New York", "Seoul", "Mexico City", "Paris", "Cape Town", "Berlin", "São Paulo", "London", "Accra"];
+const CITIES = ["Tokyo", "Paris", "Cape Town", "Mexico City", "Sydney", "Seoul", "Reykjavik", "Buenos Aires", "Mumbai", "Istanbul", "New York", "Marrakech", "Bangkok", "Lagos", "Lisbon", "Nairobi", "Vancouver", "Kyoto"];
 
 const legs = [
   { code: "01", gate: "Check in", title: "Name what you love", body: "Search real artists, films, shows, books and brands. Each pick is a Qloo entity, so the taste is exact, not a keyword guess." },
@@ -45,7 +45,7 @@ export default function Home() {
             </h1>
             <div className="tt-rise lg:pb-3" style={d(150)}>
               <p className="text-lg leading-relaxed text-white/85">
-                Tell us the artists, films, shows, books and brands you love. Qloo&apos;s taste graph finds where their fans eat, drink and wander in your next city. We turn it into days you&apos;ll actually want to walk.
+                Tell us the artists, films, shows, books and brands you love. Qloo&apos;s taste graph finds where their fans eat, drink and wander in any city on the map, from Kyoto to Cape Town to Buenos Aires. We turn it into a weekend, or a whole month, you&apos;ll actually want to walk.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <a href="#plan" className="group inline-flex h-12 items-center gap-2 rounded-md bg-[#ffd23f] px-5 font-bold text-[#0b0d17] shadow-[0_6px_0_#c99f12] transition active:translate-y-1 active:shadow-none">
@@ -132,7 +132,7 @@ export default function Home() {
         <div className="tt-reveal">
           <h2 className="text-6xl sm:text-7xl lg:text-8xl">Every stop <span className="text-[#e3361b]">gets stamped.</span></h2>
           <p className="mt-5 max-w-md text-lg leading-relaxed text-muted-foreground">
-            Qloo scores how much each of your tastes drove a match. TasteTrip prints that on every stop, so you know a bar made the list because of your Wizkid habit, not your Ghibli one.
+            Qloo scores how much each of your tastes drove a match. TasteTrip prints that on every stop, so you know a bar made the list because of your Frank Ocean habit, not your Ghibli one.
           </p>
         </div>
         <div className="tt-reveal relative">
@@ -148,9 +148,9 @@ export default function Home() {
                   <div className="font-mono text-[11px] tracking-[0.14em] text-muted-foreground uppercase">Listening bar · Shibuya</div>
                   <div className="mt-1 font-heading text-4xl leading-none font-extrabold uppercase">A vinyl bar</div>
                 </div>
-                <p className="mt-3 text-sm leading-relaxed sm:pr-20">Fans of Wizkid over-index on this bar&apos;s late sets; your Nike pick adds a little.</p>
+                <p className="mt-3 text-sm leading-relaxed sm:pr-20">Fans of Frank Ocean over-index on this bar&apos;s late sets; your Muji pick adds a little.</p>
                 <ul className="mt-4 space-y-2">
-                  {([["Wizkid", 64], ["Nike", 24], ["Spirited Away", 12]] as const).map(([n, v], i) => (
+                  {([["Frank Ocean", 64], ["Muji", 24], ["Spirited Away", 12]] as const).map(([n, v], i) => (
                     <li key={n} className="grid grid-cols-[6.5rem_1fr_2.5rem] items-center gap-2 text-xs">
                       <span className="font-semibold">{n}</span>
                       <span className="h-1.5 overflow-hidden rounded-sm bg-muted"><span className="tt-grow block h-full bg-primary" style={{ width: `${v}%`, ...d(i * 150) }} /></span>

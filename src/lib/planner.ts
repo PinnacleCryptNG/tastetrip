@@ -79,14 +79,20 @@ const DayPlanSchema = z.object({
       }),
     )
     .min(1)
-    .max(3),
+    .max(10),
+  themes: z.array(z.string().min(1).max(80)).max(40).optional(),
 });
+const MAX_TEMPLATES = 4;
+const CHUNK_DAYS = 3;
 type DaySpec = { theme: string; weekday?: string; slots: { slot: Slot; query: string }[] };
 
 async function planSlots(input: PlanInput, ctx: Ctx): Promise<DaySpec[]> {
   const id = stepId(ctx);
   ctx.emit({ type: "step", id, tool: "llm.plan_slots", status: "run", msg: `Planning ${input.days} day${input.days > 1 ? "s" : ""} of slots for your taste…` });
-  let days: DaySpec[];
+  const n = Math.min(input.days, MAX_TEMPLATES);
+  const long = input.days > n;
+  let templates: DaySpec[];
+  let themes: string[] = [];
   try {
     ctx.llm++;
     const res = await llmJson(
@@ -94,12 +100,13 @@ async function planSlots(input: PlanInput, ctx: Ctx): Promise<DaySpec[]> {
       `You plan the shape of a taste-matched city itinerary. For each day give a short theme (max 6 words) and 4-5 time slots chosen from: ${SLOTS.join(", ")} (chronological, each slot at most once per day).
 For each slot give "query": ONE short generic English place category that a tag search can match, e.g. cafe, bakery, brunch, museum, art gallery, park, garden, bookstore, record store, market, vintage, cinema, theater, restaurant, seafood, vegetarian, ramen, tapas, jazz club, live music venue, cocktail bar, wine bar, nightclub, rooftop bar.
 Pick categories the given tastes plausibly enjoy, vary them across days, and use a food category for breakfast/lunch/dinner. Never name specific venues.
-Return exactly one entry in "days" per trip day, in this shape:
-{"days":[{"theme":"Street style and soul food","slots":[{"slot":"morning","query":"vintage"},{"slot":"lunch","query":"ramen"}]}]}`,
-      JSON.stringify({ city: input.city, trip_length_days: input.days, budget_max_price_level: input.budget ?? null, tastes: input.seeds.map((s) => ({ name: s.name, type: s.type })) }),
-      900,
+Return exactly day_templates entries in "days"${long ? ` (they repeat across the ${input.days}-day trip, so make them clearly different from each other), plus "themes": exactly trip_length_days distinct short day themes (max 6 words each) that suit the city and tastes` : ""}, in this shape:
+{"days":[{"theme":"Street style and soul food","slots":[{"slot":"morning","query":"vintage"},{"slot":"lunch","query":"ramen"}]}]${long ? ',"themes":["Street style and soul food","Old town and wine bars"]' : ""}}`,
+      JSON.stringify({ city: input.city, trip_length_days: input.days, day_templates: n, budget_max_price_level: input.budget ?? null, tastes: input.seeds.map((s) => ({ name: s.name, type: s.type })) }),
+      900 + (long ? input.days * 18 : 0),
     );
-    days = res.days.slice(0, input.days).map((d) => {
+    themes = (res.themes ?? []).map((x) => x.trim()).filter(Boolean);
+    templates = res.days.slice(0, n).map((d) => {
       const seen = new Set<Slot>();
       const slots = d.slots
         .filter((s) => (seen.has(s.slot) ? false : (seen.add(s.slot), true)))
@@ -109,12 +116,26 @@ Return exactly one entry in "days" per trip day, in this shape:
     });
   } catch (e) {
     console.warn("[plan] slot planning failed, using default slots", e);
-    days = [];
+    templates = [];
   }
-  while (days.length < input.days)
-    days.push({ theme: `Day ${days.length + 1}`, slots: (["morning", "lunch", "afternoon", "dinner", "night"] as Slot[]).map((slot) => ({ slot, query: DEFAULT_QUERY[slot] })) });
-  days.forEach((d, i) => (d.weekday = weekdayFor(input.startDate, i)));
-  ctx.emit({ type: "step", id, tool: "llm.plan_slots", status: "ok", msg: "Day plan ready", detail: days.map((d, i) => `Day ${i + 1}: ${d.theme} · ${d.slots.map((s) => s.query).join(", ")}`).join("\n") });
+  while (templates.length < n)
+    templates.push({ theme: "", slots: (["morning", "lunch", "afternoon", "dinner", "night"] as Slot[]).map((slot) => ({ slot, query: DEFAULT_QUERY[slot] })) });
+  const seenThemes = new Set<string>();
+  const days: DaySpec[] = Array.from({ length: input.days }, (_, i) => {
+    const tpl = templates[i % n];
+    let theme = themes[i] && !seenThemes.has(themes[i].toLowerCase()) ? themes[i] : !tpl.theme ? `Day ${i + 1}` : i < n ? tpl.theme : `${tpl.theme}, take ${Math.floor(i / n) + 1}`;
+    if (theme.length > 80) theme = theme.slice(0, 80);
+    seenThemes.add(theme.toLowerCase());
+    return { theme, weekday: weekdayFor(input.startDate, i), slots: tpl.slots.map((s) => ({ ...s })) };
+  });
+  ctx.emit({
+    type: "step",
+    id,
+    tool: "llm.plan_slots",
+    status: "ok",
+    msg: long ? `Day plan ready · ${n} day shapes rotated over ${input.days} days` : "Day plan ready",
+    detail: templates.map((d, i) => `${long ? `Shape ${i + 1}` : `Day ${i + 1}`}: ${d.theme} · ${d.slots.map((s) => s.query).join(", ")}`).join("\n"),
+  });
   return days;
 }
 
@@ -144,6 +165,7 @@ async function fetchPools(
   exclude: string[],
   take: number,
   ctx: Ctx,
+  pagesFor?: Map<PoolKey, number>,
 ): Promise<{ pools: Map<PoolKey, Pool>; matchedCity?: string }> {
   const pools = new Map<PoolKey, Pool>();
   let matchedCity: string | undefined;
@@ -151,9 +173,18 @@ async function fetchPools(
     const id = stepId(ctx);
     const what = w.query.tagName ?? w.query.label;
     ctx.emit({ type: "step", id, tool: "qloo.recommend_places", status: "run", msg: `Searching Qloo for ${what} in ${city} matched to ${seedLabel(seeds)}${w.query.weekday ? ` (open ${w.query.weekday})` : ""}…` });
-    const res = await recommendPlaces({ seedIds: seeds.map((s) => s.entity_id), city, tagId: w.query.tagId, weekday: w.query.weekday, priceMax: w.priceMax, exclude, take });
+    const base = { seedIds: seeds.map((s) => s.entity_id), city, tagId: w.query.tagId, weekday: w.query.weekday, priceMax: w.priceMax, exclude, take };
+    const res = await recommendPlaces(base);
     ctx.qloo += res.calls;
     matchedCity ??= res.matchedCity;
+    const seen = new Set(res.places.map((c) => idKey(c.entity_id)));
+    let last = res.places.length;
+    for (let page = 2; page <= (pagesFor?.get(w.key) ?? 1) && last >= take * 0.8; page++) {
+      const more = await recommendPlaces({ ...base, page, relaxed: res.relaxed });
+      ctx.qloo += more.calls;
+      last = more.places.length;
+      for (const c of more.places) if (!seen.has(idKey(c.entity_id))) (seen.add(idKey(c.entity_id)), res.places.push(c));
+    }
     pools.set(w.key, { query: w.query, places: res.places });
     const top = res.places[0];
     ctx.emit({
@@ -181,9 +212,12 @@ async function arrange(
   specs: { dayIndex: number; slots: { slot: Slot; pool: Pool }[] }[],
   used: Set<string>,
   ctx: Ctx,
+  label?: string,
+  altN = 5,
 ): Promise<Map<number, Picked[]>> {
   const id = stepId(ctx);
-  ctx.emit({ type: "step", id, tool: "llm.arrange", status: "run", msg: "Grouping stops by neighbourhood so each day stays walkable…" });
+  const tag = label ? ` (${label})` : "";
+  ctx.emit({ type: "step", id, tool: "llm.arrange", status: "run", msg: `Grouping stops by neighbourhood so each day stays walkable${tag}…` });
   const alias = new Map<string, Candidate>();
   const aliasOf = new Map<string, string>();
   const opts = (pool: Pool) =>
@@ -248,7 +282,7 @@ Output {"days":[{"day":1,"stops":[{"slot":"morning","id":"p3"}]}]}.`,
   for (const s of specs)
     for (const p of out.get(s.dayIndex) ?? []) {
       const pool = s.slots.find((x) => x.slot === p.slot)!.pool;
-      p.alternates = pool.places.filter((c) => !taken.has(idKey(c.entity_id))).slice(0, 5);
+      p.alternates = pool.places.filter((c) => !taken.has(idKey(c.entity_id))).slice(0, altN);
     }
   ctx.rejected += rejected;
   const total = [...out.values()].reduce((a, p) => a + p.length, 0);
@@ -257,7 +291,7 @@ Output {"days":[{"day":1,"stops":[{"slot":"morning","id":"p3"}]}]}.`,
     id,
     tool: "validator",
     status: rejected ? "warn" : "ok",
-    msg: `Validated ${total}/${total} stops are Qloo entities from the candidate set${rejected ? ` · replaced ${rejected} invalid LLM pick${rejected > 1 ? "s" : ""}` : ""}`,
+    msg: `Validated ${total}/${total} stops${tag} are Qloo entities from the candidate set${rejected ? ` · replaced ${rejected} invalid LLM pick${rejected > 1 ? "s" : ""}` : ""}`,
   });
   return out;
 }
@@ -281,9 +315,19 @@ function templateWhy(c: Candidate, ex: ReturnType<typeof explainFor>) {
   return `${pct} with your taste${drivers.length ? `, driven most by ${drivers.join(" and ")}` : ""}${tags.length ? `. Tagged ${tags.join(", ")}.` : "."}`;
 }
 
-async function explain(picks: Picked[], seeds: TasteSeed[], ctx: Ctx): Promise<Map<string, string>> {
+const EXPLAIN_BATCH = 15;
+
+async function explainAll(picks: Picked[], seeds: TasteSeed[], ctx: Ctx): Promise<Map<string, string>> {
+  if (picks.length <= EXPLAIN_BATCH + 3) return explain(picks, seeds, ctx);
+  const batches = Array.from({ length: Math.ceil(picks.length / EXPLAIN_BATCH) }, (_, i) => picks.slice(i * EXPLAIN_BATCH, (i + 1) * EXPLAIN_BATCH));
+  const parts = await pmap(batches, 3, (b) => explain(b, seeds, ctx, `stops ${picks.indexOf(b[0]) + 1}–${picks.indexOf(b[0]) + b.length}`));
+  return new Map(parts.flatMap((m) => [...m]));
+}
+
+async function explain(picks: Picked[], seeds: TasteSeed[], ctx: Ctx, label?: string): Promise<Map<string, string>> {
   const id = stepId(ctx);
-  ctx.emit({ type: "step", id, tool: "llm.explain", status: "run", msg: "Writing “why this fits you” from Qloo explainability…" });
+  const tag = label ? ` (${label})` : "";
+  ctx.emit({ type: "step", id, tool: "llm.explain", status: "run", msg: `Writing “why this fits you” from Qloo explainability${tag}…` });
   const items = picks.map((p, i) => ({ p, a: `s${i + 1}`, ex: explainFor(p.cand, seeds) }));
   const out = new Map<string, string>();
   try {
@@ -324,7 +368,7 @@ Output {"items":[{"id":"s1","why":"..."}]}.`,
     }
     result.set(p.cand.entity_id, why);
   }
-  ctx.emit({ type: "step", id, tool: "llm.explain", status: templated ? "warn" : "ok", msg: templated ? `Explanations ready (${templated} grounded from Qloo fields directly)` : "Explanations ready" });
+  ctx.emit({ type: "step", id, tool: "llm.explain", status: templated ? "warn" : "ok", msg: templated ? `Explanations ready${tag} (${templated} grounded from Qloo fields directly)` : `Explanations ready${tag}` });
   return result;
 }
 
@@ -366,28 +410,58 @@ export async function planTrip(input: PlanInput, emit: Emit): Promise<{ trip: Tr
   const missingDefaults = days.flatMap((d) => d.slots).filter((s) => !tags.get(s.query)).map((s) => DEFAULT_QUERY[s.slot]).filter((q) => !tags.has(q));
   if (missingDefaults.length) for (const [k, v] of await resolveTags(missingDefaults, ctx)) tags.set(k, v);
 
+  // Past a week, one pool per weekday would multiply Qloo calls by 7, so the opening-day filter is dropped.
+  const useHours = input.days <= 7;
+  if (input.startDate && !useHours)
+    emit({ type: "step", id: stepId(ctx), status: "warn", msg: "Long trip: skipping the opening-day filter to keep Qloo calls reasonable" });
   const wanted = new Map<PoolKey, { key: PoolKey; query: SlotQuery; priceMax?: number }>();
+  const uses = new Map<PoolKey, number>();
   const slotKeys = days.map((d) =>
     d.slots.map((s) => {
-      const q = slotQuery(s.slot, s.query, tags, d.weekday);
+      const q = slotQuery(s.slot, s.query, tags, useHours ? d.weekday : undefined);
       const priceMax = FOOD_SLOTS.includes(s.slot) ? input.budget : undefined;
       const key = poolKey(q, priceMax);
       if (!wanted.has(key)) wanted.set(key, { key, query: q, priceMax });
+      uses.set(key, (uses.get(key) ?? 0) + 1);
       return { slot: s.slot, key };
     }),
   );
-  const { pools, matchedCity } = await fetchPools([...wanted.values()], input.seeds, input.city, [], Math.min(50, input.days * 4 + 8), ctx);
+  const long = input.days > CHUNK_DAYS;
+  const take = long ? 50 : Math.min(50, input.days * 4 + 8);
+  const pagesFor = new Map([...uses].map(([k, u]) => [k, long ? Math.min(3, Math.ceil((u * 2 + 6) / take)) : 1]));
+  for (let total = [...pagesFor.values()].reduce((a, b) => a + b, 0); total > 30; total--) {
+    const [k, v] = [...pagesFor].sort((a, b) => b[1] - a[1])[0];
+    if (v <= 1) break;
+    pagesFor.set(k, v - 1);
+  }
+  const { pools, matchedCity } = await fetchPools([...wanted.values()], input.seeds, input.city, [], take, ctx, pagesFor);
   if (![...pools.values()].some((p) => p.places.length))
     throw new QlooError("empty", `Qloo returned no places for this taste in ${input.city}.`);
 
-  const picked = await arrange(
-    days.map((d, i) => ({ dayIndex: i, slots: slotKeys[i].map((s) => ({ slot: s.slot, pool: pools.get(s.key)! })) })),
-    new Set(),
-    ctx,
-  );
-  const all = [...picked.values()].flat();
+  const specs = days.map((d, i) => ({ dayIndex: i, slots: slotKeys[i].map((s) => ({ slot: s.slot, key: s.key })) }));
+  let picked: Map<number, Picked[]>;
+  if (!long) {
+    picked = await arrange(specs.map((s) => ({ dayIndex: s.dayIndex, slots: s.slots.map((x) => ({ slot: x.slot, pool: pools.get(x.key)! })) })), new Set(), ctx);
+  } else {
+    // Split each pool between the 3-day chunks that use it so chunks can be arranged in parallel without repeats.
+    const chunks = Array.from({ length: Math.ceil(specs.length / CHUNK_DAYS) }, (_, i) => specs.slice(i * CHUNK_DAYS, (i + 1) * CHUNK_DAYS));
+    const share = new Map<PoolKey, Pool[]>();
+    for (const [key, pool] of pools) {
+      const users = chunks.map((c, i) => (c.some((d) => d.slots.some((s) => s.key === key)) ? i : -1)).filter((i) => i >= 0);
+      const parts = chunks.map(() => ({ query: pool.query, places: [] as Candidate[] }));
+      pool.places.forEach((c, i) => parts[users[i % users.length]]?.places.push(c));
+      share.set(key, parts);
+    }
+    const results = await pmap(chunks, 3, (chunk) => {
+      const ci = chunks.indexOf(chunk);
+      const a = chunk[0].dayIndex + 1, b = chunk[chunk.length - 1].dayIndex + 1;
+      return arrange(chunk.map((s) => ({ dayIndex: s.dayIndex, slots: s.slots.map((x) => ({ slot: x.slot, pool: share.get(x.key)![ci] })) })), new Set(), ctx, a === b ? `day ${a}` : `days ${a}–${b}`, 3);
+    });
+    picked = new Map(results.flatMap((m) => [...m]));
+  }
+  const all = days.flatMap((_, i) => picked.get(i) ?? []);
   if (!all.length) throw new QlooError("empty", `Qloo returned no places for this taste in ${input.city}.`);
-  const whys = await explain(all, input.seeds, ctx);
+  const whys = await explainAll(all, input.seeds, ctx);
 
   const candidates: Record<string, Candidate> = {};
   for (const p of all) for (const a of p.alternates) candidates[a.entity_id] = a;

@@ -1,12 +1,16 @@
 import { PINS, WORLD } from "./world-data";
 
 const ROUTES: [string, string][] = [
-  ["Lagos", "Lisbon"],
-  ["Lisbon", "New York"],
-  ["London", "Tokyo"],
-  ["Lagos", "São Paulo"],
-  ["Mexico City", "Paris"],
-  ["Cape Town", "Seoul"],
+  ["New York", "London"],
+  ["São Paulo", "Lisbon"],
+  ["Cape Town", "Mumbai"],
+  ["Sydney", "Seoul"],
+  ["Mexico City", "Buenos Aires"],
+  ["Istanbul", "Nairobi"],
+  ["Vancouver", "Reykjavik"],
+  ["Dubai", "Bangkok"],
+  ["Lagos", "Paris"],
+  ["Lima", "Los Angeles"],
 ];
 
 function arc(a: [number, number], b: [number, number]) {
@@ -31,7 +35,7 @@ export function WorldBackdrop({ className }: { className?: string }) {
         {paths.map((d, i) => (
           <path key={i} d={d} fill="none" stroke="#ffd23f" strokeOpacity=".7" strokeWidth="1.5" strokeDasharray="6 7" vectorEffect="non-scaling-stroke" strokeLinecap="round" className="tt-route" style={{ "--d": `${i * 400}ms` } as React.CSSProperties} />
         ))}
-        {paths.slice(0, 4).map((d, i) => (
+        {paths.slice(0, 6).map((d, i) => (
           <path key={i} d={PLANE} fill="#ffd23f" opacity="0" className="tt-plane">
             <animateMotion dur={`${7 + i * 1.5}s`} begin={`${1.2 + i * 1.1}s`} repeatCount="indefinite" rotate="auto" path={d} keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines=".45 0 .55 1" />
             <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.08;.9;1" dur={`${7 + i * 1.5}s`} begin={`${1.2 + i * 1.1}s`} repeatCount="indefinite" />

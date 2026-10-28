@@ -29,8 +29,11 @@ export function mockQloo(path: string, params: QlooParams): unknown {
   const seeds = String(params["signal.interests.entities"] ?? "").split(",").filter(Boolean);
   const tag = String(params["filter.tags"] ?? "urn:tag:genre:place:spot").split(":").pop();
   const excl = new Set(String(params["filter.exclude.entities"] ?? "").split(","));
-  const r = rnd(`${tag}${params["filter.location.query"]}`);
-  const entities = Array.from({ length: 14 }, (_, i) => {
+  const page = Number(params.page ?? 1);
+  const take = Math.min(50, Number(params.take ?? 14));
+  const r = rnd(`${tag}${params["filter.location.query"]}${page}`);
+  const entities = Array.from({ length: take }, (_, k) => {
+    const i = (page - 1) * take + k;
     const w = seeds.map(() => r());
     const sum = w.reduce((a, b) => a + b, 0) || 1;
     return {
@@ -41,7 +44,7 @@ export function mockQloo(path: string, params: QlooParams): unknown {
       location: { lat: 38.71 + (r() - 0.5) * 0.06, lon: -9.14 + (r() - 0.5) * 0.08 },
       tags: [{ id: `urn:tag:genre:place:${tag}`, name: tag, type: "urn:tag:genre:place" }],
       query: {
-        affinity: 0.95 - i * 0.03,
+        affinity: +Math.max(0.3, 0.97 - i * 0.012).toFixed(3),
         explainability: { "signal.interests.entities": seeds.map((s, j) => ({ entity_id: s, score: +(w[j] / sum).toFixed(3) })) },
       },
     };

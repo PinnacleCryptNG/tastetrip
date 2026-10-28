@@ -5,14 +5,20 @@ import { cn } from "@/lib/utils";
 import { SplitFlap } from "./split-flap";
 
 const ROUTES = [
-  { time: "08:30", fans: "Wizkid", to: "Tokyo", match: "92", status: "Boarding" },
-  { time: "09:45", fans: "Burna Boy", to: "Lisbon", match: "89", status: "On time" },
-  { time: "11:10", fans: "Gilmore Girls", to: "New York", match: "87", status: "Final call" },
-  { time: "12:25", fans: "Frank Ocean", to: "Paris", match: "84", status: "On time" },
-  { time: "14:05", fans: "Studio Ghibli", to: "Seoul", match: "90", status: "Boarding" },
-  { time: "15:40", fans: "Frida Kahlo", to: "CDMX", match: "86", status: "On time" },
-  { time: "17:20", fans: "Fela Kuti", to: "Lagos", match: "95", status: "Gate open" },
-  { time: "19:00", fans: "Wes Anderson", to: "London", match: "81", status: "On time" },
+  { time: "08:30", fans: "Frank Ocean", to: "Paris", match: "92", status: "Boarding" },
+  { time: "09:15", fans: "BTS", to: "Seoul", match: "94", status: "On time" },
+  { time: "10:05", fans: "Bad Bunny", to: "CDMX", match: "89", status: "Final call" },
+  { time: "11:20", fans: "Black Coffee", to: "Cape Town", match: "91", status: "Boarding" },
+  { time: "12:40", fans: "Tame Impala", to: "Sydney", match: "86", status: "On time" },
+  { time: "13:55", fans: "Studio Ghibli", to: "Kyoto", match: "93", status: "Gate open" },
+  { time: "14:30", fans: "Bjork", to: "Reykjavik", match: "88", status: "On time" },
+  { time: "15:45", fans: "Bollywood", to: "Mumbai", match: "90", status: "Boarding" },
+  { time: "16:50", fans: "Gilmore Girls", to: "New York", match: "87", status: "Final call" },
+  { time: "17:35", fans: "Rosalia", to: "Barcelona", match: "85", status: "On time" },
+  { time: "18:20", fans: "Fela Kuti", to: "Lagos", match: "95", status: "Gate open" },
+  { time: "19:10", fans: "Wes Anderson", to: "Budapest", match: "84", status: "On time" },
+  { time: "20:25", fans: "Shakira", to: "Bogota", match: "88", status: "Boarding" },
+  { time: "21:40", fans: "Anime", to: "Bangkok", match: "83", status: "On time" },
 ];
 const ROWS = 5;
 const statusColor: Record<string, string> = { Boarding: "text-[#5ef0b2]", "Final call": "text-[#ff7a5c]", "Gate open": "text-[#7fb0ff]" };
