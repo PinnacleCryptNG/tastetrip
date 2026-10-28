@@ -16,7 +16,7 @@ export default async function OG() {
     ...(reg ? [{ name: "Fraunces", data: reg, weight: 600 as const, style: "normal" as const }] : []),
     ...(ital ? [{ name: "Fraunces", data: ital, weight: 600 as const, style: "italic" as const }] : []),
   ];
-  const chips = ["Wizkid", "Spirited Away", "Nike", "Burna Boy", "Gilmore Girls"];
+  const chips = ["Wizkid", "Spirited Away", "Nike", "Burna Boy"];
   return new ImageResponse(
     (
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: 72, background: "#f7f3ec", color: "#1d1a16", fontFamily: "Fraunces" }}>
@@ -37,9 +37,9 @@ export default async function OG() {
         </div>
         <div style={{ display: "flex", gap: 14, fontSize: 28, fontFamily: "sans-serif" }}>
           {chips.map((c) => (
-            <div key={c} style={{ display: "flex", padding: "10px 22px", borderRadius: 999, background: "#fff", border: "2px solid #e6dfd3" }}>{c}</div>
+            <div key={c} style={{ display: "flex", alignItems: "center", height: 58, lineHeight: 1, padding: "0 24px", borderRadius: 999, background: "#fff", border: "2px solid #e6dfd3" }}>{c}</div>
           ))}
-          <div style={{ display: "flex", padding: "10px 22px", color: "#6b6258" }}>Powered by Qloo</div>
+          <div style={{ display: "flex", alignItems: "center", height: 58, marginLeft: "auto", whiteSpace: "nowrap", color: "#6b6258" }}>Powered by Qloo</div>
         </div>
       </div>
     ),
