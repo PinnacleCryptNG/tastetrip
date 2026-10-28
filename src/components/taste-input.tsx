@@ -60,7 +60,7 @@ export function TasteInput({ seeds, onChange, max = 6 }: { seeds: TasteSeed[]; o
       {seeds.length > 0 && (
         <ul className="flex flex-wrap gap-2">
           {seeds.map((s) => (
-            <li key={s.entity_id} className="flex items-center gap-1.5 rounded-full border border-border bg-card py-1 pr-1 pl-3 text-sm shadow-sm">
+            <li key={s.entity_id} className="flex items-center gap-1.5 rounded-full border border-border bg-background py-1 pr-1 pl-3 text-sm animate-in fade-in zoom-in-95">
               <TypeIcon type={s.type} className="size-3.5 text-primary" />
               <span className="max-w-[14rem] truncate font-medium">{s.name}</span>
               <button type="button" onClick={() => onChange(seeds.filter((x) => x.entity_id !== s.entity_id))} className="grid size-6 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={`Remove ${s.name}`}>
@@ -97,7 +97,7 @@ export function TasteInput({ seeds, onChange, max = 6 }: { seeds: TasteSeed[]; o
             else if (e.key === "Escape") setOpen(false);
           }}
           placeholder={full ? `That's ${max} — perfect.` : "An artist, film, show, book or brand you love…"}
-          className="h-12 w-full rounded-xl border border-input bg-card pr-10 pl-10 text-[15px] shadow-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-3 focus:ring-primary/15 disabled:opacity-60"
+          className="h-12 w-full rounded-2xl border border-input bg-background pr-10 pl-10 text-[15px] outline-none transition placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/12 disabled:opacity-60"
           role="combobox"
           aria-expanded={open && hits.length > 0}
           aria-controls={listId}
@@ -105,7 +105,7 @@ export function TasteInput({ seeds, onChange, max = 6 }: { seeds: TasteSeed[]; o
         />
         {loading && <LoaderCircle className="absolute top-1/2 right-3.5 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />}
         {open && (hits.length > 0 || error) && (
-          <ul id={listId} role="listbox" className="absolute z-30 mt-2 max-h-80 w-full overflow-auto rounded-xl border border-border bg-popover p-1 shadow-xl">
+          <ul id={listId} role="listbox" className="absolute z-30 mt-2 max-h-80 w-full overflow-auto rounded-2xl border border-border bg-popover p-1.5 shadow-xl animate-in fade-in slide-in-from-top-1">
             {error && <li className="px-3 py-2 text-sm text-destructive">{error}</li>}
             {hits.map((h, i) => {
               const picked = seeds.some((s) => s.entity_id === h.entity_id);
@@ -117,7 +117,7 @@ export function TasteInput({ seeds, onChange, max = 6 }: { seeds: TasteSeed[]; o
                     onMouseEnter={() => setActive(i)}
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => add(h)}
-                    className={cn("flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left", i === active && "bg-muted", picked && "opacity-50")}
+                    className={cn("flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left", i === active && "bg-muted", picked && "opacity-50")}
                   >
                     {h.image ? (
                       // eslint-disable-next-line @next/next/no-img-element

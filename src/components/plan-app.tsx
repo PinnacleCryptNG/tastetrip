@@ -1,12 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ArrowLeft, LoaderCircle, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, ArrowRight, LoaderCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import type { SearchHit } from "@/lib/qloo/api";
 import { SAMPLES, type SampleTaste } from "@/lib/samples";
 import type { PlanEvent, TasteSeed } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { TypeIcon } from "./icons";
+import { LogoMark } from "./logo";
 import { ProgressLog } from "./progress-log";
 import { TasteInput } from "./taste-input";
 import { editKeyFor } from "./trip/trip-view";
@@ -15,9 +17,9 @@ type Step = Extract<PlanEvent, { type: "step" }>;
 
 function Segmented<T extends string | number | undefined>({ value, options, onChange, label }: { value: T; options: { v: T; label: string }[]; onChange: (v: T) => void; label: string }) {
   return (
-    <div role="radiogroup" aria-label={label} className="flex rounded-xl border border-input bg-card p-1 shadow-sm">
+    <div role="radiogroup" aria-label={label} className="flex rounded-2xl border border-input bg-background p-1">
       {options.map((o) => (
-        <button key={String(o.v)} type="button" role="radio" aria-checked={o.v === value} onClick={() => onChange(o.v)} className={cn("h-10 flex-1 rounded-lg text-sm font-semibold transition", o.v === value ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}>
+        <button key={String(o.v)} type="button" role="radio" aria-checked={o.v === value} onClick={() => onChange(o.v)} className={cn("h-10 flex-1 rounded-xl text-sm font-semibold transition", o.v === value ? "bg-foreground text-background shadow-sm" : "text-muted-foreground hover:text-foreground")}>
           {o.label}
         </button>
       ))}
@@ -36,6 +38,18 @@ export function PlanApp() {
   const [steps, setSteps] = useState<Step[]>([]);
   const [error, setError] = useState<{ msg: string; hint?: string } | null>(null);
   const [loadingSample, setLoadingSample] = useState<string | null>(null);
+  const [elapsed, setElapsed] = useState(0);
+  const top = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (phase === "form") return;
+    top.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (phase !== "planning") return;
+    const t0 = Date.now();
+    setElapsed(0);
+    const iv = setInterval(() => setElapsed(Math.round((Date.now() - t0) / 1000)), 1000);
+    return () => clearInterval(iv);
+  }, [phase]);
 
   const ready = city.trim().length >= 2 && seeds.length >= 3;
 
@@ -104,44 +118,76 @@ export function PlanApp() {
     }
   }
 
-  if (phase !== "form")
+  if (phase !== "form") {
+    const finished = steps.filter((x) => x.status !== "run").length;
     return (
-      <section className="mx-auto max-w-xl">
-        <h2 className="text-2xl font-extrabold">{phase === "planning" ? `Planning ${city}…` : "That didn't work"}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {phase === "planning" ? "The agent is querying Qloo's taste graph live. This usually takes 15–40 seconds." : "No itinerary was made. TasteTrip only plans from Qloo results, so it won't guess."}
-        </p>
-        <div className="mt-5">
-          <ProgressLog steps={steps} />
-        </div>
-        {phase === "planning" && (
-          <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-            <LoaderCircle className="size-4 animate-spin" /> Working…
-          </p>
-        )}
-        {error && (
-          <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
-            <div className="font-semibold text-destructive">{error.msg}</div>
-            {error.hint && <div className="mt-1 text-muted-foreground">{error.hint}</div>}
-            <button type="button" onClick={() => setPhase("form")} className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 font-semibold hover:bg-muted">
-              <ArrowLeft className="size-4" /> Edit and retry
-            </button>
+      <div ref={top} className="scroll-mt-4">
+        <section className="tt-card-shadow rounded-[1.75rem] border border-border bg-card p-5 sm:p-7">
+          <div className="flex items-center gap-4">
+            <span className="relative grid size-14 shrink-0 place-items-center">
+              {phase === "planning" && <span className="tt-ping absolute inset-2 rounded-full bg-primary/25" />}
+              <LogoMark className="relative size-14" spinning={phase === "planning"} />
+            </span>
+            <div className="min-w-0">
+              <h2 className="text-3xl leading-tight font-semibold">{phase === "planning" ? <>Planning <em className="text-primary">{city}</em></> : "That didn't work"}</h2>
+              <p className="text-sm text-muted-foreground">
+                {phase === "planning" ? `${finished} steps done · ${elapsed}s` : "No itinerary was made. TasteTrip only plans from Qloo results, so it won't guess."}
+              </p>
+            </div>
           </div>
-        )}
-      </section>
+          {phase === "planning" && (
+            <div className="mt-5 h-1 overflow-hidden rounded-full bg-muted">
+              <div className="h-full rounded-full bg-primary transition-all duration-700" style={{ width: `${Math.min(95, 6 + finished * 7)}%` }} />
+            </div>
+          )}
+          {error && (
+            <div className="mt-5 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
+              <div className="font-semibold text-destructive">{error.msg}</div>
+              {error.hint && <div className="mt-1 text-muted-foreground">{error.hint}</div>}
+              <button type="button" onClick={() => setPhase("form")} className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-4 font-semibold hover:bg-muted">
+                <ArrowLeft className="size-4" /> Edit and retry
+              </button>
+            </div>
+          )}
+          <div className="mt-5">
+            <ProgressLog steps={steps} />
+          </div>
+        </section>
+      </div>
     );
+  }
 
   return (
     <form
-      className="mx-auto max-w-xl space-y-6"
+      className="tt-card-shadow space-y-7 rounded-[1.75rem] border border-border bg-card p-5 sm:p-7"
       onSubmit={(e) => {
         e.preventDefault();
         if (ready) plan();
       }}
     >
       <div>
+        <div className="text-sm font-semibold">Short on time? Try a sample</div>
+        <div className="-mx-5 mt-3 flex snap-x gap-3 overflow-x-auto px-5 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0">
+          {SAMPLES.map((s) => (
+            <button key={s.label} type="button" disabled={!!loadingSample} onClick={() => loadSample(s)} className="group w-[15rem] shrink-0 snap-start rounded-2xl border border-border bg-background p-4 text-left transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md disabled:opacity-60 sm:w-auto">
+              <div className="flex items-center justify-between">
+                <span className="font-heading text-xl font-semibold">{s.city}</span>
+                {loadingSample === s.label ? <LoaderCircle className="size-4 animate-spin text-primary" /> : <ArrowRight className="size-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />}
+              </div>
+              <ul className="mt-2 space-y-1">
+                {s.seeds.map((x) => (
+                  <li key={x.query} className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
+                    <TypeIcon type={x.type} className="size-3 shrink-0 text-primary" /> {x.query}
+                  </li>
+                ))}
+              </ul>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="border-t border-border pt-6">
         <label htmlFor="city" className="text-sm font-bold">Where are you going?</label>
-        <input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Lisbon, Tokyo, Lagos…" autoComplete="off" className="mt-2 h-12 w-full rounded-xl border border-input bg-card px-4 text-[15px] shadow-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-3 focus:ring-primary/15" />
+        <input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Lisbon, Tokyo, Lagos…" autoComplete="off" className="mt-2 h-12 w-full rounded-2xl border border-input bg-background px-4 text-[15px] outline-none transition placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/12" />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
@@ -159,7 +205,7 @@ export function PlanApp() {
       </div>
       <div>
         <label htmlFor="date" className="text-sm font-bold">Start date <span className="font-normal text-muted-foreground">(optional, picks places open that day)</span></label>
-        <input id="date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="mt-2 block h-12 w-full rounded-xl border border-input bg-card px-4 text-[15px] shadow-sm outline-none focus:border-primary focus:ring-3 focus:ring-primary/15 sm:w-56" />
+        <input id="date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="mt-2 block h-12 w-full rounded-2xl border border-input bg-background px-4 text-[15px] outline-none transition placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/12 sm:w-60" />
       </div>
       <div>
         <div className="flex items-baseline justify-between">
@@ -170,25 +216,15 @@ export function PlanApp() {
           <TasteInput seeds={seeds} onChange={setSeeds} />
         </div>
       </div>
-      <div>
-        <div className="text-xs font-semibold text-muted-foreground">Or try one</div>
-        <div className="mt-2 flex flex-col gap-2">
-          {SAMPLES.map((s) => (
-            <button key={s.label} type="button" disabled={!!loadingSample} onClick={() => loadSample(s)} className="flex items-center gap-2 rounded-xl border border-dashed border-input bg-card/60 px-3.5 py-2.5 text-left text-sm font-medium hover:border-primary hover:bg-card disabled:opacity-60">
-              {loadingSample === s.label ? <LoaderCircle className="size-4 animate-spin text-primary" /> : <Sparkles className="size-4 text-primary" />}
-              {s.label}
-            </button>
-          ))}
-        </div>
-      </div>
       {error && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm">
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-3 text-sm">
           <div className="font-semibold text-destructive">{error.msg}</div>
           {error.hint && <div className="mt-0.5 text-muted-foreground">{error.hint}</div>}
         </div>
       )}
-      <button type="submit" disabled={!ready} className="h-13 w-full rounded-xl bg-primary text-base font-bold text-primary-foreground shadow-md transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40">
-        Plan my trip
+      <button type="submit" disabled={!ready} className="group inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-primary text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:bg-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none">
+        {ready ? "Plan my trip" : seeds.length < 3 ? `Pick ${3 - seeds.length} more thing${3 - seeds.length > 1 ? "s" : ""} you love` : "Add a city"}
+        {ready && <ArrowRight className="size-5 transition group-hover:translate-x-0.5" />}
       </button>
     </form>
   );

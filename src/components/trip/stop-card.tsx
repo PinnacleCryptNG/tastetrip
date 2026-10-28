@@ -29,30 +29,30 @@ export function StopCard({
   const pct = stop.affinity != null ? Math.round(stop.affinity * 100) : null;
   const bars = [...stop.explain].sort((a, b) => b.score - a.score).slice(0, 4);
   return (
-    <li id={`stop-${stop.entity_id}`} className="relative pl-12">
+    <li id={`stop-${stop.entity_id}`} className="tt-rise relative pl-12" style={{ "--d": `${(n - 1) * 90}ms` } as React.CSSProperties}>
       <span className="absolute top-5 left-[15px] h-[calc(100%+0.75rem)] w-px bg-border" aria-hidden />
       <button type="button" onClick={onSelect} className="absolute top-4 left-0 grid size-8 place-items-center rounded-full text-xs font-bold text-white shadow" style={{ background: color }} aria-label={`Show ${stop.name} on map`}>
         {n}
       </button>
-      <article className={cn("rounded-2xl border bg-card p-4 shadow-sm transition sm:p-5", active ? "border-foreground/30 ring-2 ring-foreground/10" : "border-border", busy && "opacity-60")}>
+      <article className={cn("rounded-[1.5rem] border bg-card p-4 transition sm:p-5", active ? "border-foreground/30 shadow-lg ring-2 ring-foreground/10" : "border-border shadow-sm hover:shadow-md", busy && "opacity-60")}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="text-xs font-semibold" style={{ color }}>
               {SLOT_TIME[stop.slot]} · {SLOT_LABEL[stop.slot]}
               <span className="font-medium text-muted-foreground"> · {stop.query.tagName ?? stop.query.label}</span>
             </div>
-            <h3 className="mt-1 text-lg leading-tight font-bold">{stop.name}</h3>
+            <h3 className="mt-1 text-xl leading-tight font-semibold">{stop.name}</h3>
             {(stop.neighborhood || stop.address) && <p className="mt-0.5 truncate text-sm text-muted-foreground">{stop.neighborhood ?? stop.address}</p>}
           </div>
           {pct != null && (
             <div className="shrink-0 text-right" title="Qloo affinity: how strongly fans of your tastes over-index on this place">
-              <div className="font-heading text-2xl leading-none font-extrabold">{pct}%</div>
-              <div className="mt-0.5 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Qloo match</div>
+              <div className="font-heading text-3xl leading-none font-semibold">{pct}%</div>
+              <div className="mt-1 text-[11px] text-muted-foreground">Qloo match</div>
             </div>
           )}
         </div>
 
-        <div className="mt-3 rounded-xl bg-secondary/70 p-3">
+        <div className="mt-3 rounded-2xl bg-secondary/70 p-3.5">
           <div className="text-xs font-bold">Why this fits you</div>
           <p className="mt-1 text-sm leading-relaxed">{stop.why}</p>
           {bars.length > 0 && (
@@ -61,7 +61,7 @@ export function StopCard({
                 <li key={b.entity_id} className="grid grid-cols-[minmax(0,7.5rem)_1fr_2.5rem] items-center gap-2 text-xs">
                   <span className="truncate font-medium">{b.seed_name}</span>
                   <span className="h-2 overflow-hidden rounded-full bg-background">
-                    <span className="block h-full rounded-full" style={{ width: `${Math.max(4, Math.round(b.score * 100))}%`, background: color }} />
+                    <span className="tt-grow block h-full rounded-full" style={{ width: `${Math.max(4, Math.round(b.score * 100))}%`, background: color }} />
                   </span>
                   <span className="text-right text-muted-foreground tabular-nums">{Math.round(b.score * 100)}%</span>
                 </li>
@@ -94,7 +94,7 @@ export function StopCard({
             </a>
           )}
           {editable && (
-            <button type="button" onClick={onSwap} disabled={busy} className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold hover:bg-muted disabled:opacity-50">
+            <button type="button" onClick={onSwap} disabled={busy} className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-full border border-border px-3 text-xs font-semibold transition hover:border-foreground/30 hover:bg-muted disabled:opacity-50">
               {busy ? <LoaderCircle className="size-3.5 animate-spin" /> : <Shuffle className="size-3.5" />} Swap
             </button>
           )}
