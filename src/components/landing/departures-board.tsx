@@ -10,7 +10,7 @@ const ROUTES = [
   { time: "11:10", fans: "Gilmore Girls", to: "New York", match: "87", status: "Final call" },
   { time: "12:25", fans: "Frank Ocean", to: "Paris", match: "84", status: "On time" },
   { time: "14:05", fans: "Studio Ghibli", to: "Seoul", match: "90", status: "Boarding" },
-  { time: "15:40", fans: "Frida Kahlo", to: "Mexico City", match: "86", status: "On time" },
+  { time: "15:40", fans: "Frida Kahlo", to: "CDMX", match: "86", status: "On time" },
   { time: "17:20", fans: "Fela Kuti", to: "Lagos", match: "95", status: "Gate open" },
   { time: "19:00", fans: "Wes Anderson", to: "London", match: "81", status: "On time" },
 ];
@@ -33,22 +33,39 @@ export function DeparturesBoard() {
         </span>
         <span>Example routes</span>
       </div>
-      <div className="grid grid-cols-[auto_auto_auto] gap-x-[0.9em] gap-y-[0.45em] sm:grid-cols-[auto_auto_auto_auto_auto]">
-        {["Time", "For fans of", "To", "Match", "Status"].map((h, i) => (
-          <div key={h} className={cn("font-mono text-[0.75em] tracking-[0.14em] text-white/45 uppercase", (i === 0 || i === 4) && "hidden sm:block")}>
+      <div className="hidden grid-cols-[auto_auto_auto_auto_auto] gap-x-[0.9em] gap-y-[0.45em] sm:grid">
+        {["Time", "For fans of", "To", "Match", "Status"].map((h) => (
+          <div key={h} className="font-mono text-[0.75em] tracking-[0.14em] text-white/45 uppercase">
             {h}
           </div>
         ))}
         {rows.map((r, i) => (
           <div key={i} className="contents">
-            <SplitFlap className="hidden sm:inline-flex" text={r.time} length={5} delay={i * 90} />
+            <SplitFlap text={r.time} length={5} delay={i * 90} />
             <SplitFlap text={r.fans} length={13} delay={i * 90} />
             <SplitFlap text={r.to} length={11} delay={i * 90 + 40} />
             <SplitFlap text={r.match + "%"} length={3} delay={i * 90 + 80} cellClassName="text-white" />
-            <SplitFlap className="hidden sm:inline-flex" text={r.status} length={10} delay={i * 90 + 120} cellClassName={statusColor[r.status] ?? "text-white/85"} />
+            <SplitFlap text={r.status} length={10} delay={i * 90 + 120} cellClassName={statusColor[r.status] ?? "text-white/85"} />
           </div>
         ))}
       </div>
+      <ul className="space-y-3 text-[12px] min-[400px]:text-[13px] sm:hidden">
+        {rows.slice(0, 4).map((r, i) => (
+          <li key={i} className="space-y-[3px]">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-mono text-[9px] tracking-[0.14em] text-white/45 uppercase">Fans of</span>
+              <SplitFlap text={r.fans} length={13} delay={i * 90} />
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-mono text-[9px] tracking-[0.14em] text-white/45 uppercase">To · match</span>
+              <span className="flex gap-[0.6em]">
+                <SplitFlap text={r.to} length={9} delay={i * 90 + 40} />
+                <SplitFlap text={r.match + "%"} length={3} delay={i * 90 + 80} cellClassName="text-white" />
+              </span>
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

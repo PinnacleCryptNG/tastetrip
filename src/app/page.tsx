@@ -144,9 +144,11 @@ export default function Home() {
               </div>
               <div className="tt-dash-y" />
               <div className="p-5">
-                <div className="font-mono text-[11px] tracking-[0.14em] text-muted-foreground uppercase">Listening bar · Shibuya</div>
-                <div className="mt-1 font-heading text-4xl leading-none font-extrabold uppercase">A vinyl bar</div>
-                <p className="mt-3 pr-20 text-sm leading-relaxed">Fans of Wizkid over-index on this bar&apos;s late sets; your Nike pick adds a little.</p>
+                <div className="pr-24">
+                  <div className="font-mono text-[11px] tracking-[0.14em] text-muted-foreground uppercase">Listening bar · Shibuya</div>
+                  <div className="mt-1 font-heading text-4xl leading-none font-extrabold uppercase">A vinyl bar</div>
+                </div>
+                <p className="mt-3 text-sm leading-relaxed sm:pr-20">Fans of Wizkid over-index on this bar&apos;s late sets; your Nike pick adds a little.</p>
                 <ul className="mt-4 space-y-2">
                   {([["Wizkid", 64], ["Nike", 24], ["Spirited Away", 12]] as const).map(([n, v], i) => (
                     <li key={n} className="grid grid-cols-[6.5rem_1fr_2.5rem] items-center gap-2 text-xs">

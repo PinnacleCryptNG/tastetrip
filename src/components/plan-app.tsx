@@ -165,20 +165,20 @@ export function PlanApp() {
   const need = seeds.length < 3 ? `Pick ${3 - seeds.length} more thing${3 - seeds.length > 1 ? "s" : ""} you love` : "Add a destination";
   return (
     <form
-      className="overflow-hidden rounded-xl border border-border bg-card shadow-[0_24px_60px_-30px_rgb(11_13_23/.35)]"
+      className="rounded-xl border border-border bg-card shadow-[0_24px_60px_-30px_rgb(11_13_23/.35)]"
       onSubmit={(e) => {
         e.preventDefault();
         if (ready) plan();
       }}
     >
-      <div className="flex items-center justify-between bg-[#0b0d17] px-5 py-3 font-mono text-[11px] tracking-[0.18em] text-white/70 uppercase sm:px-7">
+      <div className="flex items-center justify-between rounded-t-[11px] bg-[#0b0d17] px-5 py-3 font-mono text-[11px] tracking-[0.18em] text-white/70 uppercase sm:px-7">
         <span>Boarding pass</span>
         <span className="text-[#ffd23f]">No login</span>
       </div>
       <div className="space-y-7 p-5 sm:p-7">
         <div>
           <div className="font-mono text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Popular routes · one tap</div>
-          <div className="-mx-5 mt-3 flex snap-x gap-3 overflow-x-auto px-5 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0">
+          <div className="-mx-5 mt-3 flex snap-x gap-3 overflow-x-auto px-5 pb-1 [clip-path:inset(0)] sm:[clip-path:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0">
             {SAMPLES.map((s) => (
               <button key={s.label} type="button" disabled={!!loadingSample} onClick={() => loadSample(s)} className="group w-[14.5rem] shrink-0 snap-start overflow-hidden rounded-lg border border-border bg-background text-left transition hover:-translate-y-0.5 hover:border-primary hover:shadow-lg disabled:opacity-60 sm:w-auto">
                 <div className="flex items-center justify-between bg-primary px-3.5 py-2 text-white">
@@ -236,7 +236,7 @@ export function PlanApp() {
         )}
       </div>
       <div className="tt-perf-x -mt-1.5 bg-transparent" />
-      <div className="bg-secondary p-5 sm:p-7">
+      <div className="rounded-b-[11px] bg-secondary p-5 sm:p-7">
         <button type="submit" disabled={!ready} className="group inline-flex h-14 w-full items-center justify-center gap-2 rounded-md bg-[#ffd23f] text-base font-bold text-[#0b0d17] shadow-[0_6px_0_#c99f12] transition active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:bg-[#e4e6ee] disabled:text-muted-foreground disabled:shadow-none">
           {ready ? "Plan my trip" : need}
           {ready && <ArrowRight className="size-5 transition group-hover:translate-x-0.5" />}
