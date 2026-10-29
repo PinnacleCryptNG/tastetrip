@@ -67,11 +67,13 @@ export function PlanApp() {
           return h ? { entity_id: h.entity_id, name: h.name, type: h.type } : null;
         }),
       );
-      setSeeds(found.filter((x): x is TasteSeed => !!x));
+      const picked = found.filter((x): x is TasteSeed => !!x);
+      setSeeds(picked);
       setCity(s.city);
       setDays(s.days);
       setCustom(s.days > 3);
       setBudget(undefined);
+      if (picked.length >= 3) void plan({ city: s.city, days: s.days, seeds: picked });
     } catch (e) {
       setError({ msg: (e as Error).message, hint: (e as { hint?: string }).hint });
     } finally {
@@ -79,7 +81,8 @@ export function PlanApp() {
     }
   }
 
-  async function plan() {
+  async function plan(over?: { city: string; days: number; budget?: number; seeds: TasteSeed[] }) {
+    const req = over ?? { city, days, budget, seeds };
     setPhase("planning");
     setSteps([]);
     setError(null);
@@ -87,7 +90,7 @@ export function PlanApp() {
       const r = await fetch("/api/plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ city: city.trim(), days, budget, startDate: startDate || undefined, seeds }),
+        body: JSON.stringify({ city: req.city.trim(), days: req.days, budget: req.budget, startDate: startDate || undefined, seeds: req.seeds }),
       });
       if (!r.ok || !r.body) {
         const j = await r.json().catch(() => ({}));

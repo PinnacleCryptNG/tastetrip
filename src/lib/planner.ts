@@ -446,10 +446,13 @@ export async function planTrip(input: PlanInput, emit: Emit): Promise<{ trip: Tr
     // Split each pool between the 3-day chunks that use it so chunks can be arranged in parallel without repeats.
     const chunks = Array.from({ length: Math.ceil(specs.length / CHUNK_DAYS) }, (_, i) => specs.slice(i * CHUNK_DAYS, (i + 1) * CHUNK_DAYS));
     const share = new Map<PoolKey, Pool[]>();
+    const claimed = new Set<string>();
     for (const [key, pool] of pools) {
       const users = chunks.map((c, i) => (c.some((d) => d.slots.some((s) => s.key === key)) ? i : -1)).filter((i) => i >= 0);
       const parts = chunks.map(() => ({ query: pool.query, places: [] as Candidate[] }));
-      pool.places.forEach((c, i) => parts[users[i % users.length]]?.places.push(c));
+      // A place can sit in several pools (a cafe that is also a bakery); give it to the first one only.
+      const own = pool.places.filter((c) => !claimed.has(idKey(c.entity_id)) && !!claimed.add(idKey(c.entity_id)));
+      own.forEach((c, i) => parts[users[i % users.length]]?.places.push(c));
       share.set(key, parts);
     }
     const results = await pmap(chunks, 3, (chunk) => {
@@ -458,6 +461,36 @@ export async function planTrip(input: PlanInput, emit: Emit): Promise<{ trip: Tr
       return arrange(chunk.map((s) => ({ dayIndex: s.dayIndex, slots: s.slots.map((x) => ({ slot: x.slot, pool: share.get(x.key)![ci] })) })), new Set(), ctx, a === b ? `day ${a}` : `days ${a}–${b}`, 3);
     });
     picked = new Map(results.flatMap((m) => [...m]));
+    // Niche pools run dry over long trips; fill open slots with unused Qloo candidates of the same kind (food / daytime / night).
+    const fam = (s: Slot) => (FOOD_SLOTS.includes(s) ? "food" : s === "night" ? "night" : "day");
+    const taken = new Set([...picked.values()].flat().map((p) => idKey(p.cand.entity_id)));
+    const spare = new Map<string, { cand: Candidate; query: SlotQuery }[]>();
+    for (const sp of specs)
+      for (const x of sp.slots) {
+        const pool = pools.get(x.key)!;
+        const list = spare.get(fam(x.slot)) ?? [];
+        for (const c of pool.places)
+          if (!taken.has(idKey(c.entity_id)) && !list.some((l) => idKey(l.cand.entity_id) === idKey(c.entity_id))) list.push({ cand: c, query: pool.query });
+        spare.set(fam(x.slot), list);
+      }
+    for (const list of spare.values()) list.sort((a, b) => (b.cand.affinity ?? 0) - (a.cand.affinity ?? 0));
+    let filled = 0;
+    for (const sp of specs) {
+      const got = picked.get(sp.dayIndex) ?? [];
+      for (const x of sp.slots) {
+        if (got.some((p) => p.slot === x.slot)) continue;
+        const list = spare.get(fam(x.slot)) ?? [];
+        const i = list.findIndex((l) => !taken.has(idKey(l.cand.entity_id)));
+        if (i < 0) continue;
+        const [{ cand, query }] = list.splice(i, 1);
+        taken.add(idKey(cand.entity_id));
+        got.push({ slot: x.slot, cand, query, alternates: list.filter((l) => !taken.has(idKey(l.cand.entity_id))).slice(0, 3).map((l) => l.cand) });
+        filled++;
+      }
+      got.sort((a, b) => SLOTS.indexOf(a.slot) - SLOTS.indexOf(b.slot));
+      picked.set(sp.dayIndex, got);
+    }
+    if (filled) emit({ type: "step", id: stepId(ctx), status: "ok", msg: `Filled ${filled} open slots with other Qloo candidates of the same kind` });
   }
   const all = days.flatMap((_, i) => picked.get(i) ?? []);
   if (!all.length) throw new QlooError("empty", `Qloo returned no places for this taste in ${input.city}.`);
