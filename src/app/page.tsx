@@ -165,7 +165,7 @@ export default function Home() {
             <Stamp value={88} sub="Tokyo" className="absolute top-4 right-4" />
           </div>
           <div className="pointer-events-none absolute -bottom-8 -left-4 hidden sm:block">
-            <Stamp value={92} label="Matched" sub="Lisbon" color="var(--tt-primary)" rotate={12} delay={300} className="bg-[var(--background)]" />
+            <Stamp value={92} label="Matched" sub="Lisbon" color="var(--primary)" rotate={12} delay={300} className="bg-[var(--background)]" />
           </div>
           <p className="mt-4 text-right font-mono text-[11px] text-muted-foreground">Example. Real trips use Qloo&apos;s live scores.</p>
         </div>
