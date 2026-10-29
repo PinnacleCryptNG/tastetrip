@@ -74,15 +74,15 @@ export type PlaceQuery = {
 export function insightsParams(q: PlaceQuery): QlooParams {
   return {
     "filter.type": "urn:entity:place",
-    "signal.interests.entities": q.seedIds,
+    "signal.interests.entities": q.seedIds.length ? q.seedIds : undefined,
     "filter.location.query": q.city,
     "filter.tags": q.tagId,
     "filter.hours": q.weekday,
     "filter.price_level.max": q.priceMax,
     "filter.exclude.entities": q.exclude?.length ? q.exclude : undefined,
-    "filter.popularity.min": q.relaxed ? undefined : 0.2,
+    "filter.popularity.min": q.relaxed ? undefined : q.seedIds.length ? 0.2 : 0.4,
     "bias.quality": q.relaxed ? undefined : "medium",
-    "feature.explainability": true,
+    "feature.explainability": q.seedIds.length ? true : undefined,
     take: Math.min(50, q.take ?? 15),
     page: q.page && q.page > 1 ? q.page : undefined,
   };

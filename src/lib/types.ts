@@ -103,7 +103,7 @@ export const PlanInputSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional(),
-  seeds: z.array(TasteSeedSchema).min(3).max(6),
+  seeds: z.array(TasteSeedSchema).max(6).default([]),
 });
 export type PlanInput = z.infer<typeof PlanInputSchema>;
 

@@ -1,6 +1,6 @@
 # TasteTrip
 
-**A city itinerary built from what you love.** Pick 3–6 artists, films, shows, books or brands, choose any city and 1–30 days, and TasteTrip uses [Qloo](https://qloo.com)'s taste graph to find the places whose fans overlap most with yours. An agent then arranges them into walkable days and tells you *why* each stop fits, using Qloo's explainability scores.
+**A city itinerary built from what you love.** Pick up to 6 artists, films, shows, books or brands (optional), choose any city and 1–30 days, and TasteTrip uses [Qloo](https://qloo.com)'s taste graph to find the places whose fans overlap most with yours. An agent then arranges them into walkable days and tells you *why* each stop fits, using Qloo's explainability scores.
 
 Built for the **Qloo Agentic Hackathon** (Oct 2026).
 

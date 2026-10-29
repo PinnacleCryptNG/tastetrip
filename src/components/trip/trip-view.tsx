@@ -93,7 +93,7 @@ export function TripView({ initial }: { initial: Trip }) {
               {trip.matchedCity ?? trip.city}
             </h1>
             <div className="mt-5 flex flex-wrap items-center gap-2 text-sm">
-              <span className="font-mono text-[11px] tracking-[0.16em] text-white/60 uppercase">For fans of</span>
+              <span className="font-mono text-[11px] tracking-[0.16em] text-white/60 uppercase">{trip.seeds.length ? "For fans of" : "Qloo's best-loved spots"}</span>
               {trip.seeds.map((s) => (
                 <span key={s.entity_id} className="inline-flex items-center gap-1.5 rounded-md bg-[var(--tt-ink)] px-2.5 py-1 font-semibold">
                   <TypeIcon type={s.type} className="size-3.5 text-[var(--tt-accent)]" /> {s.name}

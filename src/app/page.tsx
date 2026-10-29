@@ -118,7 +118,7 @@ export default function Home() {
           <div className="tt-reveal lg:sticky lg:top-10 lg:self-start">
             <h2 className="text-7xl sm:text-8xl">Check in<span className="text-primary">.</span></h2>
             <p className="mt-5 max-w-sm text-lg leading-relaxed text-muted-foreground">
-              Three picks is enough; six gives Qloo more to work with. Mix types: a musician, a film and a brand say more together than three bands.
+              One pick is enough, and mixing types (a musician, a film, a brand) tells Qloo more. In a hurry? Skip it and get the city&apos;s best-loved spots.
             </p>
             <a href="#plan-form" className="mt-6 inline-flex items-center gap-2 font-mono text-xs tracking-[0.16em] text-primary uppercase lg:hidden">
               Start below <ArrowDown className="size-3.5" />

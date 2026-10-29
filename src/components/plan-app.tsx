@@ -52,7 +52,7 @@ export function PlanApp() {
     return () => clearInterval(iv);
   }, [phase]);
 
-  const ready = city.trim().length >= 2 && seeds.length >= 3;
+  const ready = city.trim().length >= 2;
 
   async function loadSample(s: SampleTaste) {
     setLoadingSample(s.label);
@@ -73,7 +73,7 @@ export function PlanApp() {
       setDays(s.days);
       setCustom(s.days > 3);
       setBudget(undefined);
-      if (picked.length >= 3) void plan({ city: s.city, days: s.days, seeds: picked });
+      if (picked.length) void plan({ city: s.city, days: s.days, seeds: picked });
     } catch (e) {
       setError({ msg: (e as Error).message, hint: (e as { hint?: string }).hint });
     } finally {
@@ -167,7 +167,7 @@ export function PlanApp() {
     );
   }
 
-  const need = seeds.length < 3 ? `Pick ${3 - seeds.length} more thing${3 - seeds.length > 1 ? "s" : ""} you love` : "Add a destination";
+  const need = "Add a destination";
   return (
     <form
       className="rounded-xl border border-border bg-card shadow-[0_24px_60px_-30px_rgb(11_13_23/.35)]"
@@ -230,9 +230,10 @@ export function PlanApp() {
             )}
           </div>
           <div>
-            <div className="font-mono text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Class <span className="normal-case tracking-normal font-normal">· food &amp; drink budget</span></div>
+            <div className="font-mono text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Food &amp; drink budget</div>
             <div className="mt-2">
-              <Segmented label="Budget" value={budget} onChange={setBudget} options={[{ v: undefined, label: "Any" }, { v: 1, label: "$" }, { v: 2, label: "$$" }, { v: 3, label: "$$$" }]} />
+              <Segmented label="Budget" value={budget} onChange={setBudget} options={[{ v: undefined, label: "Any" }, { v: 1, label: "Cheap" }, { v: 2, label: "Mid" }, { v: 3, label: "Pricey" }]} />
+              <p className="mt-1.5 px-1 font-mono text-[10px] tracking-[0.06em] text-muted-foreground">Caps prices for breakfast, lunch and dinner.</p>
             </div>
           </div>
         </div>
@@ -243,10 +244,11 @@ export function PlanApp() {
         <div>
           <div className="flex items-baseline justify-between">
             <div className="font-mono text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Passenger tastes</div>
-            <div className="font-mono text-[11px] text-muted-foreground">{seeds.length}/6 · min 3</div>
+            <div className="font-mono text-[11px] text-muted-foreground">{seeds.length}/6 · optional</div>
           </div>
           <div className="mt-2">
             <TasteInput seeds={seeds} onChange={setSeeds} />
+            {seeds.length === 0 && <p className="mt-1.5 px-1 text-xs text-muted-foreground">Add even one and every stop shows which taste it matches. Skip it to get the city&apos;s best-loved spots.</p>}
           </div>
         </div>
         {error && (
