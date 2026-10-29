@@ -4,7 +4,7 @@ import { ExternalLink, LoaderCircle, Shuffle, Star } from "lucide-react";
 import { SLOT_LABEL, SLOT_TIME, type Stop } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Stamp } from "../stamp";
-import { SLOT_COLOR } from "./slot-style";
+import { SLOT_COLOR, SLOT_PIN } from "./slot-style";
 
 const mapsUrl = (s: Stop) =>
   `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([s.name, s.address].filter(Boolean).join(", ") || `${s.lat},${s.lon}`)}`;
@@ -32,9 +32,9 @@ export function StopCard({
   return (
     <li id={`stop-${stop.entity_id}`} className="tt-rise" style={{ "--d": `${(n - 1) * 90}ms` } as React.CSSProperties}>
       <article className={cn("relative grid grid-cols-[4.25rem_1px_minmax(0,1fr)] overflow-hidden rounded-xl border bg-card transition sm:grid-cols-[5.5rem_1px_minmax(0,1fr)]", active ? "border-primary shadow-lg ring-2 ring-primary/20" : "border-border shadow-sm hover:shadow-md", busy && "opacity-60")}>
-        <button type="button" onClick={onSelect} className="flex flex-col items-center gap-1.5 bg-[#0b0d17] px-1 py-4 text-white" aria-label={`Show ${stop.name} on map`}>
-          <span className="grid size-7 place-items-center rounded-full font-mono text-xs font-bold" style={{ background: color }}>{n}</span>
-          <span className="font-mono text-base font-bold text-[#ffd23f] sm:text-xl">{SLOT_TIME[stop.slot]}</span>
+        <button type="button" onClick={onSelect} className="flex flex-col items-center gap-1.5 bg-[var(--tt-ink)] px-1 py-4 text-white" aria-label={`Show ${stop.name} on map`}>
+          <span className="grid size-7 place-items-center rounded-full font-mono text-xs font-bold text-white ring-1 ring-white/30" style={{ background: SLOT_PIN[stop.slot] }}>{n}</span>
+          <span className="font-mono text-base font-bold text-[var(--tt-accent)] sm:text-xl">{SLOT_TIME[stop.slot]}</span>
           <span className="font-mono text-[9px] tracking-[0.14em] text-white/55 uppercase">{SLOT_LABEL[stop.slot]}</span>
         </button>
         <div className="tt-dash-y" />
@@ -92,7 +92,7 @@ export function StopCard({
             </a>
           )}
           {editable && (
-            <button type="button" onClick={onSwap} disabled={busy} className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-md bg-[#0b0d17] px-3 text-xs font-bold text-[#ffd23f] transition hover:bg-primary hover:text-white disabled:opacity-50">
+            <button type="button" onClick={onSwap} disabled={busy} className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-md bg-[var(--tt-ink)] px-3 text-xs font-bold text-[var(--tt-accent)] transition hover:bg-primary hover:text-white disabled:opacity-50">
               {busy ? <LoaderCircle className="size-3.5 animate-spin" /> : <Shuffle className="size-3.5" />} Swap
             </button>
           )}

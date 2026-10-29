@@ -17,11 +17,11 @@ const ROWS = [
   ["BLACK COFFEE", "CAPE TOWN", "91%"],
 ];
 
-function Flaps({ text, n, color = "#ffd23f" }: { text: string; n: number; color?: string }) {
+function Flaps({ text, n, color = "#ffb3c1" }: { text: string; n: number; color?: string }) {
   return (
     <div style={{ display: "flex", gap: 3 }}>
       {text.padEnd(n, " ").split("").map((c, i) => (
-        <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 30, height: 42, borderRadius: 4, background: "#1d2030", color, fontSize: 26, fontFamily: "Mono" }}>{c}</div>
+        <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 30, height: 42, borderRadius: 4, background: "#2b171f", color, fontSize: 26, fontFamily: "Mono" }}>{c}</div>
       ))}
     </div>
   );
@@ -31,15 +31,15 @@ export default async function OG() {
   const [disp, mono] = await Promise.all([font("Big+Shoulders", 900), font("JetBrains+Mono", 700)]).catch(() => [null, null]);
   return new ImageResponse(
     (
-      <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "56px 64px", background: "#2f3cff", color: "#fff", fontFamily: "Display" }}>
+      <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "56px 64px", background: "#6d1a36", color: "#fff", fontFamily: "Display" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 40, letterSpacing: 1 }}>
-          <svg width="48" height="48" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#12141f" /><path d="M21.1 21.4 19.75 15.25l2.63-2.63C23.5 11.5 23.88 10 23.5 9.25c-.75-.38-2.25 0-3.38 1.13L17.5 13l-6.15-1.35c-.38-.08-.68.08-.83.38l-.22.38c-.15.37-.08.75.22.97L14.5 16.75 13 19h-2.25l-.75.75 2.25 1.5 1.5 2.25.75-.75V20.5l2.25-1.5 2.63 3.98c.22.3.6.37.97.22l.38-.15c.3-.23.45-.53.37-.9Z" fill="#ffd23f" /></svg>
-          <span>TASTE</span><span style={{ color: "#ffd23f", marginLeft: -14 }}>TRIP</span>
+          <svg width="48" height="48" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#201117" /><path d="M21.1 21.4 19.75 15.25l2.63-2.63C23.5 11.5 23.88 10 23.5 9.25c-.75-.38-2.25 0-3.38 1.13L17.5 13l-6.15-1.35c-.38-.08-.68.08-.83.38l-.22.38c-.15.37-.08.75.22.97L14.5 16.75 13 19h-2.25l-.75.75 2.25 1.5 1.5 2.25.75-.75V20.5l2.25-1.5 2.63 3.98c.22.3.6.37.97.22l.38-.15c.3-.23.45-.53.37-.9Z" fill="#ffb3c1" /></svg>
+          <span>TASTE</span><span style={{ color: "#ffb3c1", marginLeft: -14 }}>TRIP</span>
         </div>
         <div style={{ display: "flex", fontSize: 150, lineHeight: 0.82, gap: 32 }}>
-          TRAVEL BY <span style={{ color: "#ffd23f" }}>TASTE.</span>
+          TRAVEL BY <span style={{ color: "#ffb3c1" }}>TASTE.</span>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: 20, borderRadius: 14, background: "#0b0d17" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: 20, borderRadius: 14, background: "#1a0d12" }}>
           {ROWS.map(([a, b, c]) => (
             <div key={a} style={{ display: "flex", gap: 22 }}>
               <Flaps text={a} n={13} />

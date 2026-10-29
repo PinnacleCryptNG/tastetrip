@@ -14,9 +14,9 @@ const toolLabel: Record<string, string> = {
   validator: "VALIDATOR",
 };
 const status = {
-  run: { label: "Boarding", cls: "text-[#ffd23f] tt-blink" },
-  ok: { label: "Landed", cls: "text-[#5ef0b2]" },
-  warn: { label: "Delayed", cls: "text-[#ff7a5c]" },
+  run: { label: "Boarding", cls: "text-[var(--tt-accent)] tt-blink" },
+  ok: { label: "Landed", cls: "text-[var(--tt-mint)]" },
+  warn: { label: "Delayed", cls: "text-[var(--tt-coral)]" },
 } as const;
 
 export function ProgressLog({ steps }: { steps: Step[] }) {
@@ -27,7 +27,7 @@ export function ProgressLog({ steps }: { steps: Step[] }) {
         return (
           <li key={s.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 px-2 py-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
             <div className="min-w-0">
-              {s.tool && <div className="font-mono text-[10px] font-bold tracking-[0.14em] text-[#7fb0ff]">{toolLabel[s.tool] ?? s.tool.toUpperCase()}</div>}
+              {s.tool && <div className="font-mono text-[10px] font-bold tracking-[0.14em] text-[var(--tt-sky)]">{toolLabel[s.tool] ?? s.tool.toUpperCase()}</div>}
               <div className="text-sm font-medium text-white">{s.msg}</div>
               {s.detail && <div className="mt-1 font-mono text-[11px] leading-relaxed break-all whitespace-pre-line text-white/45">{s.detail}</div>}
             </div>

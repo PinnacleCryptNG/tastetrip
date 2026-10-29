@@ -17,11 +17,16 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
 };
 
-export const viewport: Viewport = { themeColor: "#2f3cff", width: "device-width", initialScale: 1 };
+const THEME_SCRIPT = `try{var t=localStorage.getItem("tt-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}`;
+
+export const viewport: Viewport = { themeColor: [{ media: "(prefers-color-scheme: light)", color: "#6d1a36" }, { media: "(prefers-color-scheme: dark)", color: "#140a0e" }], width: "device-width", initialScale: 1 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth" className={`${body.variable} ${display.variable} ${board.variable}`}>
+    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning className={`${body.variable} ${display.variable} ${board.variable}`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="min-h-dvh antialiased">{children}</body>
     </html>
   );

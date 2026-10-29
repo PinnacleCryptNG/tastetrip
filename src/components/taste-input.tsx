@@ -60,8 +60,8 @@ export function TasteInput({ seeds, onChange, max = 6 }: { seeds: TasteSeed[]; o
       {seeds.length > 0 && (
         <ul className="flex flex-wrap gap-2">
           {seeds.map((s) => (
-            <li key={s.entity_id} className="flex items-center gap-1.5 rounded-md bg-[#0b0d17] py-1 pr-1 pl-2.5 text-sm text-white animate-in fade-in zoom-in-95">
-              <TypeIcon type={s.type} className="size-3.5 text-[#ffd23f]" />
+            <li key={s.entity_id} className="flex items-center gap-1.5 rounded-md bg-[var(--tt-ink)] py-1 pr-1 pl-2.5 text-sm text-white animate-in fade-in zoom-in-95">
+              <TypeIcon type={s.type} className="size-3.5 text-[var(--tt-accent)]" />
               <span className="max-w-[14rem] truncate font-semibold">{s.name}</span>
               <button type="button" onClick={() => onChange(seeds.filter((x) => x.entity_id !== s.entity_id))} className="grid size-6 place-items-center rounded text-white/60 hover:bg-white/15 hover:text-white" aria-label={`Remove ${s.name}`}>
                 <X className="size-3.5" />

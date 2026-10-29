@@ -33,17 +33,17 @@ export function WorldBackdrop({ className }: { className?: string }) {
       <img src="/world.svg" alt="" className="absolute inset-0 h-full w-full object-cover opacity-[0.22]" />
       <svg viewBox={`0 0 ${WORLD.w} ${WORLD.h}`} preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full">
         {paths.map((d, i) => (
-          <path key={i} d={d} fill="none" stroke="#ffd23f" strokeOpacity=".7" strokeWidth="1.5" strokeDasharray="6 7" vectorEffect="non-scaling-stroke" strokeLinecap="round" className="tt-route" style={{ "--d": `${i * 400}ms` } as React.CSSProperties} />
+          <path key={i} d={d} fill="none" stroke="var(--tt-accent)" strokeOpacity=".7" strokeWidth="1.5" strokeDasharray="6 7" vectorEffect="non-scaling-stroke" strokeLinecap="round" className="tt-route" style={{ "--d": `${i * 400}ms` } as React.CSSProperties} />
         ))}
         {paths.slice(0, 6).map((d, i) => (
-          <path key={i} d={PLANE} fill="#ffd23f" opacity="0" className="tt-plane">
+          <path key={i} d={PLANE} fill="var(--tt-accent)" opacity="0" className="tt-plane">
             <animateMotion dur={`${7 + i * 1.5}s`} begin={`${1.2 + i * 1.1}s`} repeatCount="indefinite" rotate="auto" path={d} keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines=".45 0 .55 1" />
             <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.08;.9;1" dur={`${7 + i * 1.5}s`} begin={`${1.2 + i * 1.1}s`} repeatCount="indefinite" />
           </path>
         ))}
         {cities.map((c, i) => (
           <g key={c} transform={`translate(${PINS[c][0]} ${PINS[c][1]})`}>
-            <circle r="1.6" fill="#ffd23f" fillOpacity=".35" className="tt-ping" style={{ transformBox: "fill-box", transformOrigin: "center", "--d": `${i * 300}ms` } as React.CSSProperties} />
+            <circle r="1.6" fill="var(--tt-accent)" fillOpacity=".35" className="tt-ping" style={{ transformBox: "fill-box", transformOrigin: "center", "--d": `${i * 300}ms` } as React.CSSProperties} />
             <circle r=".8" fill="#fff" />
           </g>
         ))}

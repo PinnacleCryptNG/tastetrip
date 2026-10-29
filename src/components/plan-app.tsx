@@ -19,7 +19,7 @@ function Segmented<T extends string | number | undefined>({ value, options, onCh
   return (
     <div role="radiogroup" aria-label={label} className="flex rounded-md border border-input bg-background p-1">
       {options.map((o) => (
-        <button key={String(o.v)} type="button" role="radio" aria-checked={o.v === value} onClick={() => onChange(o.v)} className={cn("h-10 flex-1 rounded-[5px] font-mono text-sm font-bold transition", o.v === value ? "bg-[#0b0d17] text-[#ffd23f]" : "text-muted-foreground hover:text-foreground")}>
+        <button key={String(o.v)} type="button" role="radio" aria-checked={o.v === value} onClick={() => onChange(o.v)} className={cn("h-10 flex-1 rounded-[5px] font-mono text-sm font-bold transition", o.v === value ? "bg-[var(--tt-ink)] text-[var(--tt-accent)]" : "text-muted-foreground hover:text-foreground")}>
           {o.label}
         </button>
       ))}
@@ -124,15 +124,15 @@ export function PlanApp() {
     const finished = steps.filter((x) => x.status !== "run").length;
     return (
       <div ref={top} className="scroll-mt-4">
-        <section className="overflow-hidden rounded-xl bg-[#0b0d17] text-white shadow-[0_30px_80px_-30px_rgb(0_0_0/.6)]">
+        <section className="overflow-hidden rounded-xl bg-[var(--tt-ink)] text-white shadow-[0_30px_80px_-30px_rgb(0_0_0/.6)]">
           <div className="flex items-center gap-4 border-b border-white/10 p-5 sm:p-6">
             <span className="relative grid size-12 shrink-0 place-items-center">
-              {phase === "planning" && <span className="tt-ping absolute inset-1 rounded-lg bg-[#ffd23f]/30" />}
+              {phase === "planning" && <span className="tt-ping absolute inset-1 rounded-lg bg-[var(--tt-accent)]/30" />}
               <LogoMark className="relative size-12" busy={phase === "planning"} />
             </span>
             <div className="min-w-0">
               <div className="font-mono text-[10px] tracking-[0.18em] text-white/50 uppercase">{phase === "planning" ? "Now planning" : "Cancelled"}</div>
-              <h2 className="mt-1 truncate text-4xl text-[#ffd23f]">{phase === "planning" ? city : "That didn't work"}</h2>
+              <h2 className="mt-1 truncate text-4xl text-[var(--tt-accent)]">{phase === "planning" ? city : "That didn't work"}</h2>
             </div>
             {phase === "planning" && (
               <div className="ml-auto text-right font-mono text-[11px] text-white/60">
@@ -143,15 +143,15 @@ export function PlanApp() {
           </div>
           {phase === "planning" && (
             <div className="h-1 bg-white/10">
-              <div className="h-full bg-[#ffd23f] transition-all duration-700" style={{ width: `${Math.min(95, 6 + finished * 7)}%` }} />
+              <div className="h-full bg-[var(--tt-accent)] transition-all duration-700" style={{ width: `${Math.min(95, 6 + finished * 7)}%` }} />
             </div>
           )}
           {error && (
-            <div className="m-5 rounded-md border border-[#ff7a5c]/40 bg-[#ff7a5c]/10 p-4 text-sm">
-              <div className="font-semibold text-[#ff9c84]">{error.msg}</div>
+            <div className="m-5 rounded-md border border-[var(--tt-coral)]/40 bg-[var(--tt-coral)]/10 p-4 text-sm">
+              <div className="font-semibold text-[var(--tt-coral-2)]">{error.msg}</div>
               {error.hint && <div className="mt-1 text-white/70">{error.hint}</div>}
               <p className="mt-2 text-white/50">No itinerary was made. TasteTrip only plans from Qloo results, so it won&apos;t guess.</p>
-              <button type="button" onClick={() => setPhase("form")} className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-md bg-[#ffd23f] px-4 font-bold text-[#0b0d17]">
+              <button type="button" onClick={() => setPhase("form")} className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-md bg-[var(--tt-accent)] px-4 font-bold text-[var(--tt-ink)]">
                 <ArrowLeft className="size-4" /> Edit and retry
               </button>
             </div>
@@ -173,9 +173,9 @@ export function PlanApp() {
         if (ready) plan();
       }}
     >
-      <div className="flex items-center justify-between rounded-t-[11px] bg-[#0b0d17] px-5 py-3 font-mono text-[11px] tracking-[0.18em] text-white/70 uppercase sm:px-7">
+      <div className="flex items-center justify-between rounded-t-[11px] bg-[var(--tt-ink)] px-5 py-3 font-mono text-[11px] tracking-[0.18em] text-white/70 uppercase sm:px-7">
         <span>Boarding pass</span>
-        <span className="text-[#ffd23f]">No login</span>
+        <span className="text-[var(--tt-accent)]">No login</span>
       </div>
       <div className="space-y-7 p-5 sm:p-7">
         <div>
@@ -183,7 +183,7 @@ export function PlanApp() {
           <div className="-mx-5 mt-3 flex snap-x gap-3 overflow-x-auto px-5 pb-1 [clip-path:inset(0)] sm:[clip-path:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0">
             {SAMPLES.map((s) => (
               <button key={s.label} type="button" disabled={!!loadingSample} onClick={() => loadSample(s)} className="group w-[14.5rem] shrink-0 snap-start overflow-hidden rounded-lg border border-border bg-background text-left transition hover:-translate-y-0.5 hover:border-primary hover:shadow-lg disabled:opacity-60 sm:w-auto">
-                <div className="flex items-center justify-between bg-primary px-3.5 py-2 text-white">
+                <div className="flex items-center justify-between bg-[var(--tt-primary)] px-3.5 py-2 text-white">
                   <span className="font-heading text-2xl leading-none font-extrabold uppercase">{s.city}</span>
                   {loadingSample === s.label ? <LoaderCircle className="size-4 animate-spin" /> : <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />}
                 </div>
@@ -217,9 +217,9 @@ export function PlanApp() {
             {custom && (
               <div className="mt-2 rounded-md border border-input bg-background p-2">
                 <div className="flex items-center gap-2">
-                  <button type="button" aria-label="One day fewer" onClick={() => setDays((d) => Math.max(1, d - 1))} className="grid size-9 shrink-0 place-items-center rounded-[5px] bg-[#0b0d17] font-mono text-lg font-bold text-[#ffd23f]">−</button>
-                  <input type="range" min={1} max={30} value={days} onChange={(e) => setDays(+e.target.value)} aria-label="Trip length in days" className="h-9 min-w-0 flex-1 accent-[#2f3cff]" />
-                  <button type="button" aria-label="One day more" onClick={() => setDays((d) => Math.min(30, d + 1))} className="grid size-9 shrink-0 place-items-center rounded-[5px] bg-[#0b0d17] font-mono text-lg font-bold text-[#ffd23f]">+</button>
+                  <button type="button" aria-label="One day fewer" onClick={() => setDays((d) => Math.max(1, d - 1))} className="grid size-9 shrink-0 place-items-center rounded-[5px] bg-[var(--tt-ink)] font-mono text-lg font-bold text-[var(--tt-accent)]">−</button>
+                  <input type="range" min={1} max={30} value={days} onChange={(e) => setDays(+e.target.value)} aria-label="Trip length in days" className="h-9 min-w-0 flex-1 accent-[var(--tt-primary)]" />
+                  <button type="button" aria-label="One day more" onClick={() => setDays((d) => Math.min(30, d + 1))} className="grid size-9 shrink-0 place-items-center rounded-[5px] bg-[var(--tt-ink)] font-mono text-lg font-bold text-[var(--tt-accent)]">+</button>
                   <output className="w-[4.5rem] shrink-0 text-right font-heading text-2xl leading-none font-extrabold uppercase">{days}<span className="ml-1 font-mono text-[10px] tracking-[0.1em] text-muted-foreground">{days > 1 ? "days" : "day"}</span></output>
                 </div>
                 <p className="mt-1.5 px-1 font-mono text-[10px] tracking-[0.06em] text-muted-foreground">Up to 30 days.{days > 7 ? " Long trips take a minute or two to plan." : ""}</p>
@@ -255,7 +255,7 @@ export function PlanApp() {
       </div>
       <div className="tt-perf-x -mt-1.5 bg-transparent" />
       <div className="rounded-b-[11px] bg-secondary p-5 sm:p-7">
-        <button type="submit" disabled={!ready} className="group inline-flex h-14 w-full items-center justify-center gap-2 rounded-md bg-[#ffd23f] text-base font-bold text-[#0b0d17] shadow-[0_6px_0_#c99f12] transition active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:bg-[#e4e6ee] disabled:text-muted-foreground disabled:shadow-none">
+        <button type="submit" disabled={!ready} className="group inline-flex h-14 w-full items-center justify-center gap-2 rounded-md bg-[var(--tt-accent)] text-base font-bold text-[var(--tt-ink)] shadow-[0_6px_0_var(--tt-accent-deep)] transition active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:bg-[var(--tt-paper-3)] disabled:text-muted-foreground disabled:shadow-none">
           {ready ? "Plan my trip" : need}
           {ready && <ArrowRight className="size-5 transition group-hover:translate-x-0.5" />}
         </button>

@@ -21,7 +21,7 @@ const ROUTES = [
   { time: "21:40", fans: "Anime", to: "Bangkok", match: "83", status: "On time" },
 ];
 const ROWS = 5;
-const statusColor: Record<string, string> = { Boarding: "text-[#5ef0b2]", "Final call": "text-[#ff7a5c]", "Gate open": "text-[#7fb0ff]" };
+const statusColor: Record<string, string> = { Boarding: "text-[var(--tt-mint)]", "Final call": "text-[var(--tt-coral)]", "Gate open": "text-[var(--tt-sky)]" };
 
 export function DeparturesBoard() {
   const [offset, setOffset] = useState(0);
@@ -32,10 +32,10 @@ export function DeparturesBoard() {
   const rows = Array.from({ length: ROWS }, (_, i) => ROUTES[(offset + i) % ROUTES.length]);
 
   return (
-    <div className="relative overflow-hidden rounded-xl bg-[#0b0d17] p-3 text-[10px] shadow-[0_30px_80px_-20px_rgb(0_0_0/.6)] ring-1 ring-white/10 min-[420px]:text-[11px] sm:p-5 sm:text-[13px] lg:text-[15px]">
+    <div className="relative overflow-hidden rounded-xl bg-[var(--tt-ink)] p-3 text-[10px] shadow-[0_30px_80px_-20px_rgb(0_0_0/.6)] ring-1 ring-white/10 min-[420px]:text-[11px] sm:p-5 sm:text-[13px] lg:text-[15px]">
       <div className="mb-3 flex items-center justify-between gap-3 font-mono text-[10px] tracking-[0.18em] text-white/60 uppercase sm:mb-4 sm:text-xs">
         <span className="flex items-center gap-2">
-          <span className="size-1.5 rounded-full bg-[#5ef0b2] tt-blink" /> Departures by taste
+          <span className="size-1.5 rounded-full bg-[var(--tt-mint)] tt-blink" /> Departures by taste
         </span>
         <span>Example routes</span>
       </div>

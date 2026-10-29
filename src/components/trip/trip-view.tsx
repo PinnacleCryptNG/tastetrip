@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Check, ChevronLeft, ChevronRight, LoaderCircle, Plus, RefreshCw, Share2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ThemeToggle } from "@/components/theme-toggle";
 import type { Trip } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { TypeIcon } from "../icons";
@@ -66,7 +67,7 @@ export function TripView({ initial }: { initial: Trip }) {
 
   return (
     <main className="pb-16">
-      <div className="relative isolate overflow-hidden bg-[#2f3cff] text-white">
+      <div className="relative isolate overflow-hidden bg-[var(--tt-primary)] text-white">
         <WorldBackdrop className="absolute inset-0 -z-10 opacity-70" />
         <div className="mx-auto max-w-6xl px-4 pt-5 pb-8 sm:px-6">
           <nav className="flex items-center justify-between">
@@ -74,10 +75,11 @@ export function TripView({ initial }: { initial: Trip }) {
               <Logo tone="light" />
             </Link>
             <div className="flex items-center gap-2">
+              <ThemeToggle className="text-white ring-1 ring-white/35 hover:bg-white/10" />
               <button type="button" onClick={share} className="inline-flex h-10 items-center gap-1.5 rounded-md px-3.5 text-sm font-bold ring-1 ring-white/35 transition hover:bg-white/10">
-                {copied ? <Check className="size-4 text-[#ffd23f]" /> : <Share2 className="size-4" />} {copied ? "Copied" : "Share"}
+                {copied ? <Check className="size-4 text-[var(--tt-accent)]" /> : <Share2 className="size-4" />} {copied ? "Copied" : "Share"}
               </button>
-              <Link href="/#plan" className="inline-flex h-10 items-center gap-1.5 rounded-md bg-[#ffd23f] px-3.5 text-sm font-bold text-[#0b0d17]" aria-label="New trip">
+              <Link href="/#plan" className="inline-flex h-10 items-center gap-1.5 rounded-md bg-[var(--tt-accent)] px-3.5 text-sm font-bold text-[var(--tt-ink)]" aria-label="New trip">
                 <Plus className="size-4" /> <span className="hidden sm:inline">New trip</span>
               </Link>
             </div>
@@ -93,8 +95,8 @@ export function TripView({ initial }: { initial: Trip }) {
             <div className="mt-5 flex flex-wrap items-center gap-2 text-sm">
               <span className="font-mono text-[11px] tracking-[0.16em] text-white/60 uppercase">For fans of</span>
               {trip.seeds.map((s) => (
-                <span key={s.entity_id} className="inline-flex items-center gap-1.5 rounded-md bg-[#0b0d17] px-2.5 py-1 font-semibold">
-                  <TypeIcon type={s.type} className="size-3.5 text-[#ffd23f]" /> {s.name}
+                <span key={s.entity_id} className="inline-flex items-center gap-1.5 rounded-md bg-[var(--tt-ink)] px-2.5 py-1 font-semibold">
+                  <TypeIcon type={s.type} className="size-3.5 text-[var(--tt-accent)]" /> {s.name}
                 </span>
               ))}
             </div>
@@ -109,7 +111,7 @@ export function TripView({ initial }: { initial: Trip }) {
                   data-day-tab={i}
                   aria-selected={i === day}
                   onClick={() => (setDay(i), setActiveId(undefined))}
-                  className={cn("max-w-[16rem] shrink-0 snap-start rounded-md px-4 py-2.5 text-left transition", i === day ? "bg-[#ffd23f] text-[#0b0d17] shadow-[0_5px_0_#c99f12]" : "bg-white/10 text-white hover:bg-white/20")}
+                  className={cn("max-w-[16rem] shrink-0 snap-start rounded-md px-4 py-2.5 text-left transition", i === day ? "bg-[var(--tt-accent)] text-[var(--tt-ink)] shadow-[0_5px_0_var(--tt-accent-deep)]" : "bg-white/10 text-white hover:bg-white/20")}
                 >
                   <div className="font-mono text-[10px] font-bold tracking-[0.16em] uppercase opacity-70">Day {String(i + 1).padStart(2, "0")}{x.weekday ? ` · ${x.weekday}` : ""}</div>
                   <div className="truncate text-sm font-bold">{x.theme}</div>
@@ -128,15 +130,15 @@ export function TripView({ initial }: { initial: Trip }) {
               <h2 className="text-4xl sm:text-5xl">{d.theme}</h2>
               {trip.itinerary.length > 3 && (
                 <div className="mt-1 flex items-center gap-1 font-mono text-xs font-bold">
-                  <button type="button" aria-label="Previous day" disabled={day === 0} onClick={() => (setDay(day - 1), setActiveId(undefined))} className="grid size-7 place-items-center rounded-md bg-[#0b0d17] text-[#ffd23f] disabled:opacity-30"><ChevronLeft className="size-4" /></button>
+                  <button type="button" aria-label="Previous day" disabled={day === 0} onClick={() => (setDay(day - 1), setActiveId(undefined))} className="grid size-7 place-items-center rounded-md bg-[var(--tt-ink)] text-[var(--tt-accent)] disabled:opacity-30"><ChevronLeft className="size-4" /></button>
                   <span className="px-1.5 tracking-[0.12em] uppercase">Day {day + 1} / {trip.itinerary.length}</span>
-                  <button type="button" aria-label="Next day" disabled={day === trip.itinerary.length - 1} onClick={() => (setDay(day + 1), setActiveId(undefined))} className="grid size-7 place-items-center rounded-md bg-[#0b0d17] text-[#ffd23f] disabled:opacity-30"><ChevronRight className="size-4" /></button>
+                  <button type="button" aria-label="Next day" disabled={day === trip.itinerary.length - 1} onClick={() => (setDay(day + 1), setActiveId(undefined))} className="grid size-7 place-items-center rounded-md bg-[var(--tt-ink)] text-[var(--tt-accent)] disabled:opacity-30"><ChevronRight className="size-4" /></button>
                 </div>
               )}
               <p className="text-sm text-muted-foreground">{d.stops.length} stops{d.weekday && d.stops.length && d.stops.every((s) => s.query.weekday) ? `, all open on ${d.weekday}` : ""}</p>
             </div>
             {editable && (
-              <button type="button" disabled={!!busy} onClick={() => mutate("regenerate", { day }, `day-${day}`)} className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-md bg-[#0b0d17] px-3.5 text-sm font-bold text-[#ffd23f] transition hover:bg-primary hover:text-white disabled:opacity-50">
+              <button type="button" disabled={!!busy} onClick={() => mutate("regenerate", { day }, `day-${day}`)} className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-md bg-[var(--tt-ink)] px-3.5 text-sm font-bold text-[var(--tt-accent)] transition hover:bg-primary hover:text-white disabled:opacity-50">
                 <RefreshCw className={cn("size-4", busy === `day-${day}` && "animate-spin")} /> <span className="hidden sm:inline">Regenerate day</span><span className="sm:hidden">Redo day</span>
               </button>
             )}

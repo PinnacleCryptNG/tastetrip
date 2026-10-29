@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { ArrowDown, ArrowRight, BadgeCheck, CircleSlash, Fingerprint, LockOpen, Plane } from "lucide-react";
 import { DeparturesBoard } from "@/components/landing/departures-board";
 import { WorldBackdrop } from "@/components/landing/world-backdrop";
@@ -26,7 +27,7 @@ const advisories = [
 export default function Home() {
   return (
     <main className="overflow-x-clip">
-      <section className="relative isolate overflow-hidden bg-[#2f3cff] text-white">
+      <section className="relative isolate overflow-hidden bg-[var(--tt-primary)] text-white">
         <WorldBackdrop className="absolute inset-0 -z-10 opacity-45 sm:opacity-100" />
         <div className="tt-grid-bg absolute inset-0 -z-10" aria-hidden />
         <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 pt-5 sm:px-8">
@@ -34,6 +35,7 @@ export default function Home() {
           <div className="flex items-center gap-5 text-sm font-semibold text-white/75">
             <a href="#how" className="hidden hover:text-white sm:block">How it works</a>
             <a href={REPO} className="hover:text-white">GitHub</a>
+            <ThemeToggle className="-mr-2 text-white/80 hover:bg-white/10 hover:text-white" />
           </div>
         </nav>
 
@@ -41,14 +43,14 @@ export default function Home() {
           <div className="grid gap-8 lg:grid-cols-[1fr_21rem] lg:items-end">
             <h1 className="tt-rise text-[clamp(5.2rem,21vw,9.75rem)] leading-[0.86] font-black">
               Travel by<br />
-              <span className="text-[#ffd23f]">taste.</span>
+              <span className="text-[var(--tt-accent)]">taste.</span>
             </h1>
             <div className="tt-rise lg:pb-3" style={d(150)}>
               <p className="text-lg leading-relaxed text-white/85">
                 Tell us the artists, films, shows, books and brands you love. Qloo&apos;s taste graph finds where their fans eat, drink and wander in any city on the map, from Kyoto to Cape Town to Buenos Aires. We turn it into a weekend, or a whole month, you&apos;ll actually want to walk.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <a href="#plan" className="group inline-flex h-12 items-center gap-2 rounded-md bg-[#ffd23f] px-5 font-bold text-[#0b0d17] shadow-[0_6px_0_#c99f12] transition active:translate-y-1 active:shadow-none">
+                <a href="#plan" className="group inline-flex h-12 items-center gap-2 rounded-md bg-[var(--tt-accent)] px-5 font-bold text-[var(--tt-ink)] shadow-[0_6px_0_var(--tt-accent-deep)] transition active:translate-y-1 active:shadow-none">
                   Check in your taste <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />
                 </a>
                 <a href="#how" className="inline-flex h-12 items-center rounded-md px-4 font-semibold text-white ring-1 ring-white/35 transition hover:bg-white/10">How it works</a>
@@ -62,14 +64,14 @@ export default function Home() {
 
         <div className="relative h-14 overflow-hidden" aria-hidden>
           <div className="tt-dash-x absolute top-1/2 right-0 left-0 opacity-60 [--border:#fff]" />
-          <Plane className="absolute top-1/2 size-6 -translate-y-1/2 rotate-45 fill-[#ffd23f] text-[#ffd23f]" style={{ animation: "tt-taxi 14s linear infinite" }} />
+          <Plane className="absolute top-1/2 size-6 -translate-y-1/2 rotate-45 fill-[var(--tt-accent)] text-[var(--tt-accent)]" style={{ animation: "tt-taxi 14s linear infinite" }} />
         </div>
       </section>
 
-      <div className="tt-marquee-wrap overflow-hidden border-y-2 border-[#0b0d17] bg-[#ffd23f] py-3" aria-hidden>
+      <div className="tt-marquee-wrap overflow-hidden border-y-2 border-[var(--tt-ink)] bg-[var(--tt-accent)] py-3" aria-hidden>
         <div className="tt-marquee flex w-max items-center gap-6 whitespace-nowrap">
           {[...CITIES, ...CITIES].map((c, i) => (
-            <span key={i} className="flex items-center gap-6 font-heading text-3xl font-extrabold text-[#0b0d17] uppercase">
+            <span key={i} className="flex items-center gap-6 font-heading text-3xl font-extrabold text-[var(--tt-ink)] uppercase">
               {c}
               <Plane className="size-5 rotate-45 fill-current" />
             </span>
@@ -85,7 +87,7 @@ export default function Home() {
           <p className="tt-reveal max-w-xs text-muted-foreground">From a playlist to a plan in under a minute. You can watch every Qloo call as it happens.</p>
         </div>
         <div className="tt-reveal mt-12 overflow-hidden rounded-xl border border-border bg-card shadow-[0_24px_60px_-30px_rgb(11_13_23/.35)]">
-          <div className="flex items-center justify-between bg-[#0b0d17] px-5 py-3 font-mono text-[11px] tracking-[0.18em] text-white/70 uppercase">
+          <div className="flex items-center justify-between bg-[var(--tt-ink)] px-5 py-3 font-mono text-[11px] tracking-[0.18em] text-white/70 uppercase">
             <span>Boarding pass · TasteTrip</span>
             <span className="hidden sm:block">Seat: wherever your taste lands</span>
           </div>
@@ -111,7 +113,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="plan" className="scroll-mt-0 border-y border-border bg-[#eceef5]">
+      <section id="plan" className="scroll-mt-0 border-y border-border bg-[var(--secondary)]">
         <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] gap-10 px-5 py-20 sm:px-8 lg:grid-cols-[0.75fr_1.25fr] lg:gap-14 lg:py-28">
           <div className="tt-reveal lg:sticky lg:top-10 lg:self-start">
             <h2 className="text-7xl sm:text-8xl">Check in<span className="text-primary">.</span></h2>
@@ -130,7 +132,7 @@ export default function Home() {
 
       <section className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] gap-12 px-5 py-20 sm:px-8 lg:grid-cols-2 lg:items-center lg:py-28">
         <div className="tt-reveal">
-          <h2 className="text-6xl sm:text-7xl lg:text-8xl">Every stop <span className="text-[#e3361b]">gets stamped.</span></h2>
+          <h2 className="text-6xl sm:text-7xl lg:text-8xl">Every stop <span className="text-[var(--tt-stamp)]">gets stamped.</span></h2>
           <p className="mt-5 max-w-md text-lg leading-relaxed text-muted-foreground">
             Qloo scores how much each of your tastes drove a match. TasteTrip prints that on every stop, so you know a bar made the list because of your Frank Ocean habit, not your Ghibli one.
           </p>
@@ -138,8 +140,8 @@ export default function Home() {
         <div className="tt-reveal relative">
           <div className="relative overflow-hidden rounded-xl border border-border bg-card shadow-[0_24px_60px_-30px_rgb(11_13_23/.35)]">
             <div className="grid grid-cols-[5.5rem_1px_1fr]">
-              <div className="flex flex-col items-center justify-center gap-1 bg-[#0b0d17] p-3 text-white">
-                <span className="font-mono text-2xl font-bold text-[#ffd23f]">21:30</span>
+              <div className="flex flex-col items-center justify-center gap-1 bg-[var(--tt-ink)] p-3 text-white">
+                <span className="font-mono text-2xl font-bold text-[var(--tt-accent)]">21:30</span>
                 <span className="font-mono text-[10px] tracking-[0.16em] text-white/60 uppercase">Night</span>
               </div>
               <div className="tt-dash-y" />
@@ -163,20 +165,20 @@ export default function Home() {
             <Stamp value={88} sub="Tokyo" className="absolute top-4 right-4" />
           </div>
           <div className="pointer-events-none absolute -bottom-8 -left-4 hidden sm:block">
-            <Stamp value={92} label="Matched" sub="Lisbon" color="#2f3cff" rotate={12} delay={300} className="bg-[#f7f7f2]" />
+            <Stamp value={92} label="Matched" sub="Lisbon" color="var(--tt-primary)" rotate={12} delay={300} className="bg-[var(--background)]" />
           </div>
           <p className="mt-4 text-right font-mono text-[11px] text-muted-foreground">Example. Real trips use Qloo&apos;s live scores.</p>
         </div>
       </section>
 
-      <section className="bg-[#0b0d17] text-white">
+      <section className="bg-[var(--tt-ink)] text-white">
         <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:py-24">
-          <h2 className="tt-reveal max-w-3xl text-6xl sm:text-7xl">Travel <span className="text-[#ffd23f]">advisories.</span></h2>
+          <h2 className="tt-reveal max-w-3xl text-6xl sm:text-7xl">Travel <span className="text-[var(--tt-accent)]">advisories.</span></h2>
           <ul className="mt-12 grid gap-px overflow-hidden rounded-xl bg-white/10 sm:grid-cols-2 lg:grid-cols-4">
             {advisories.map((a, i) => (
-              <li key={a.title} className="tt-reveal bg-[#0b0d17] p-6">
+              <li key={a.title} className="tt-reveal bg-[var(--tt-ink)] p-6">
                 <div className="flex items-center justify-between">
-                  <a.icon className="size-6 text-[#ffd23f]" />
+                  <a.icon className="size-6 text-[var(--tt-accent)]" />
                   <span className="font-mono text-[10px] tracking-[0.16em] text-white/40">NO. 0{i + 1}</span>
                 </div>
                 <h3 className="mt-6 text-3xl">{a.title}</h3>
@@ -184,13 +186,13 @@ export default function Home() {
               </li>
             ))}
           </ul>
-          <a href="#plan" className="group mt-12 inline-flex h-12 items-center gap-2 rounded-md bg-[#ffd23f] px-5 font-bold text-[#0b0d17] shadow-[0_6px_0_#c99f12] transition active:translate-y-1 active:shadow-none">
+          <a href="#plan" className="group mt-12 inline-flex h-12 items-center gap-2 rounded-md bg-[var(--tt-accent)] px-5 font-bold text-[var(--tt-ink)] shadow-[0_6px_0_var(--tt-accent-deep)] transition active:translate-y-1 active:shadow-none">
             Plan a trip now <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />
           </a>
         </div>
       </section>
 
-      <footer className="bg-[#0b0d17] text-white/60">
+      <footer className="bg-[var(--tt-ink)] text-white/60">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 border-t border-white/10 px-5 py-8 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <Logo tone="light" />
           <p className="max-w-xl leading-relaxed">
