@@ -50,10 +50,13 @@ export async function findPlaceTag(query: string): Promise<{ tag: FoundTag | nul
     const tags = normalizeTags(raw).filter((t) => /:place/.test(t.id) || /:place/.test(t.type ?? ""));
     if (!tags.length) continue;
     const q = query.trim().toLowerCase();
+    // Qloo returns hotel variants (urn:tag:genre:place:hotel:ramen) next to the real category; those match almost nothing.
+    const nonHotel = /hotel/.test(q) ? tags : tags.filter((t) => !t.id.includes(":hotel:"));
+    const list = nonHotel.length ? nonHotel : tags;
     const best =
-      tags.find((t) => t.name.toLowerCase() === q) ??
-      tags.find((t) => t.id.startsWith("urn:tag:genre:place")) ??
-      tags[0];
+      list.find((t) => t.name.toLowerCase() === q) ??
+      list.find((t) => t.id.startsWith("urn:tag:genre:place")) ??
+      list[0];
     return { tag: best, cached: cachedAll, calls };
   }
   return { tag: null, cached: cachedAll, calls };

@@ -299,6 +299,30 @@ Output {"days":[{"day":1,"stops":[{"slot":"morning","id":"p3"}]}]}.`,
 // ---------- (5) LLM: grounded explanations ----------
 const WhySchema = z.object({ items: z.array(z.object({ id: z.string(), why: z.string().min(5).max(400) })) });
 
+const SHOW_TAG = /^urn:tag:(ambience|cuisine|culinary_style|menu_highlight|specialty_dish|activity_type|setting|decor|dietary_option|beverage_offering|view|interests):/;
+
+// Qloo place tags include payments, parking, restrooms, age ranges etc.; only show the descriptive ones.
+function displayTags(c: Candidate, n: number, skip?: string) {
+  const seen = new Set<string>(skip ? [skip.toLowerCase()] : []);
+  return c.tags
+    .filter((t) => SHOW_TAG.test(t.type ?? t.id) || SHOW_TAG.test(t.id))
+    .filter((t) => {
+      const k = t.name.trim().toLowerCase();
+      if (!k || /^\d/.test(k) || seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    })
+    .slice(0, n);
+}
+
+// The label shown on a card must describe the place itself, not just the slot it was searched for.
+function queryFor(p: Picked): SlotQuery {
+  const c = p.cand;
+  if (!p.query.tagId || c.tags.some((t) => idKey(t.id) === idKey(p.query.tagId!))) return p.query;
+  const genre = c.tags.find((t) => (t.type ?? t.id).startsWith("urn:tag:genre:place"))?.name;
+  return genre ? { ...p.query, label: genre, tagName: genre } : p.query;
+}
+
 function explainFor(c: Candidate, seeds: TasteSeed[]) {
   return c.explain
     .map((e) => {
@@ -310,12 +334,12 @@ function explainFor(c: Candidate, seeds: TasteSeed[]) {
 
 function templateWhy(c: Candidate, ex: ReturnType<typeof explainFor>, category?: string) {
   if (!ex.length && c.affinity == null) {
-    const tags = c.tags.slice(0, 3).map((t) => t.name.toLowerCase());
+    const tags = displayTags(c, 3).map((t) => t.name.toLowerCase());
     return `A well-loved ${(category ?? "spot").toLowerCase()} in Qloo's place graph${tags.length ? `, tagged ${tags.join(", ")}` : ""}.`;
   }
   const pct = c.affinity != null ? `${Math.round(c.affinity * 100)}% Qloo affinity` : "a strong Qloo match";
   const drivers = ex.filter((e) => e.score >= 0.1).slice(0, 2).map((e) => e.seed_name);
-  const tags = c.tags.slice(0, 2).map((t) => t.name.toLowerCase());
+  const tags = displayTags(c, 2).map((t) => t.name.toLowerCase());
   return `${pct} with your taste${drivers.length ? `, driven most by ${drivers.join(" and ")}` : ""}${tags.length ? `. Tagged ${tags.join(", ")}.` : "."}`;
 }
 
@@ -333,6 +357,8 @@ async function explain(picks: Picked[], seeds: TasteSeed[], ctx: Ctx, label?: st
   const tag = label ? ` (${label})` : "";
   ctx.emit({ type: "step", id, tool: "llm.explain", status: "run", msg: seeds.length ? `Writing “why this fits you” from Qloo explainability${tag}…` : `Writing short notes from Qloo's tags${tag}…` });
   const items = picks.map((p, i) => ({ p, a: `s${i + 1}`, ex: explainFor(p.cand, seeds) }));
+  // Lead each line with the taste that is unusually strong for this stop, not the one that tops every stop.
+  const mean = new Map(seeds.map((s) => [s.entity_id, items.reduce((a, it) => a + (it.ex.find((e) => e.entity_id === s.entity_id)?.score ?? 0), 0) / Math.max(1, items.length)]));
   const out = new Map<string, string>();
   try {
     ctx.llm++;
@@ -341,7 +367,7 @@ async function explain(picks: Picked[], seeds: TasteSeed[], ctx: Ctx, label?: st
       seeds.length
         ? `Write one short "why this fits you" line (18-30 words) per stop, addressed to the traveller ("you"). Name the top taste driver(s) from explain and weave in one or two of the stop's tags so each line is specific.
 Ground it ONLY in the given fields: name, slot, tags, Qloo affinity, and explain (which of the traveller's tastes drove Qloo's match, with 0-1 scores).
-Mention only taste names that appear in that stop's explain list (the highest-scoring first). Do not invent dishes, history, awards or facts not in the tags.
+Mention only taste names that appear in that stop's explain list, which is ordered by what makes this stop distinctive: lead with the first one listed, so lines across the trip don't all lead with the same taste. Do not invent dishes, history, awards or facts not in the tags.
 Phrase affinity as aggregate ("fans of X tend to love…"), never as a fact about the person.
 Output {"items":[{"id":"s1","why":"..."}]}.`
         : `Write one short "why go" line (14-26 words) per stop, addressed to the traveller ("you"), saying what the place offers at that time of day. Vary the openings; don't start every line the same way.
@@ -352,10 +378,10 @@ Output {"items":[{"id":"s1","why":"..."}]}.`,
           id: a,
           name: p.cand.name,
           slot: p.slot,
-          category: p.query.tagName ?? p.query.label,
-          tags: p.cand.tags.slice(0, 8).map((t) => t.name),
+          category: queryFor(p).tagName ?? queryFor(p).label,
+          tags: displayTags(p.cand, 8).map((t) => t.name),
           affinity: seeds.length && p.cand.affinity != null ? Math.round(p.cand.affinity * 100) : null,
-          explain: ex.slice(0, 3).map((e) => ({ taste: e.seed_name, score: +e.score.toFixed(2) })),
+          explain: [...ex].sort((a, b) => b.score - (mean.get(b.entity_id) ?? 0) - (a.score - (mean.get(a.entity_id) ?? 0))).slice(0, 3).map((e) => ({ taste: e.seed_name, score: +e.score.toFixed(2) })),
         })),
       ),
       1600,
@@ -371,7 +397,7 @@ Output {"items":[{"id":"s1","why":"..."}]}.`,
     const allowed = new Set(ex.filter((e) => e.score >= 0.05).map((e) => e.seed_name.toLowerCase()));
     const mentionsUngrounded = why && seeds.some((s) => !allowed.has(s.name.toLowerCase()) && why!.toLowerCase().includes(s.name.toLowerCase()));
     if (!why || (ex.length > 0 && mentionsUngrounded)) {
-      why = templateWhy(seeds.length ? p.cand : { ...p.cand, affinity: undefined }, ex, p.query.tagName ?? p.query.label);
+      why = templateWhy(seeds.length ? p.cand : { ...p.cand, affinity: undefined }, ex, queryFor(p).tagName ?? queryFor(p).label);
       templated++;
     }
     result.set(p.cand.entity_id, why);
@@ -390,7 +416,7 @@ function toStop(p: Picked, seeds: TasteSeed[], why: string): Stop {
     neighborhood: c.neighborhood,
     lat: c.lat,
     lon: c.lon,
-    tags: c.tags.slice(0, 6).map((t) => t.name),
+    tags: displayTags(c, 6, queryFor(p).tagName ?? queryFor(p).label).map((t) => t.name),
     affinity: seeds.length ? c.affinity : undefined,
     price_level: c.price_level,
     rating: c.rating,
@@ -398,7 +424,7 @@ function toStop(p: Picked, seeds: TasteSeed[], why: string): Stop {
     explain: explainFor(c, seeds),
     why,
     alternates: p.alternates.map((a) => a.entity_id),
-    query: p.query,
+    query: queryFor(p),
   };
 }
 
@@ -469,37 +495,37 @@ export async function planTrip(input: PlanInput, emit: Emit): Promise<{ trip: Tr
       return arrange(chunk.map((s) => ({ dayIndex: s.dayIndex, slots: s.slots.map((x) => ({ slot: x.slot, pool: share.get(x.key)![ci] })) })), new Set(), ctx, a === b ? `day ${a}` : `days ${a}–${b}`, 3);
     });
     picked = new Map(results.flatMap((m) => [...m]));
-    // Niche pools run dry over long trips; fill open slots with unused Qloo candidates of the same kind (food / daytime / night).
-    const fam = (s: Slot) => (FOOD_SLOTS.includes(s) ? "food" : s === "night" ? "night" : "day");
-    const taken = new Set([...picked.values()].flat().map((p) => idKey(p.cand.entity_id)));
-    const spare = new Map<string, { cand: Candidate; query: SlotQuery }[]>();
-    for (const sp of specs)
-      for (const x of sp.slots) {
-        const pool = pools.get(x.key)!;
-        const list = spare.get(fam(x.slot)) ?? [];
-        for (const c of pool.places)
-          if (!taken.has(idKey(c.entity_id)) && !list.some((l) => idKey(l.cand.entity_id) === idKey(c.entity_id))) list.push({ cand: c, query: pool.query });
-        spare.set(fam(x.slot), list);
-      }
-    for (const list of spare.values()) list.sort((a, b) => (b.cand.affinity ?? 0) - (a.cand.affinity ?? 0));
-    let filled = 0;
-    for (const sp of specs) {
-      const got = picked.get(sp.dayIndex) ?? [];
-      for (const x of sp.slots) {
-        if (got.some((p) => p.slot === x.slot)) continue;
-        const list = spare.get(fam(x.slot)) ?? [];
-        const i = list.findIndex((l) => !taken.has(idKey(l.cand.entity_id)));
-        if (i < 0) continue;
-        const [{ cand, query }] = list.splice(i, 1);
-        taken.add(idKey(cand.entity_id));
-        got.push({ slot: x.slot, cand, query, alternates: list.filter((l) => !taken.has(idKey(l.cand.entity_id))).slice(0, 3).map((l) => l.cand) });
-        filled++;
-      }
-      got.sort((a, b) => SLOTS.indexOf(a.slot) - SLOTS.indexOf(b.slot));
-      picked.set(sp.dayIndex, got);
-    }
-    if (filled) emit({ type: "step", id: stepId(ctx), status: "ok", msg: `Filled ${filled} open slots with other Qloo candidates of the same kind` });
   }
+  // Some pools come back thin or empty (a niche tag, a long trip); fill open slots with unused Qloo candidates of the same kind (food / daytime / night).
+  const fam = (s: Slot) => (FOOD_SLOTS.includes(s) ? "food" : s === "night" ? "night" : "day");
+  const taken = new Set([...picked.values()].flat().map((p) => idKey(p.cand.entity_id)));
+  const spare = new Map<string, { cand: Candidate; query: SlotQuery }[]>();
+  for (const sp of specs)
+    for (const x of sp.slots) {
+      const pool = pools.get(x.key)!;
+      const list = spare.get(fam(x.slot)) ?? [];
+      for (const c of pool.places)
+        if (!taken.has(idKey(c.entity_id)) && !list.some((l) => idKey(l.cand.entity_id) === idKey(c.entity_id))) list.push({ cand: c, query: pool.query });
+      spare.set(fam(x.slot), list);
+    }
+  for (const list of spare.values()) list.sort((a, b) => (b.cand.affinity ?? 0) - (a.cand.affinity ?? 0));
+  let filled = 0;
+  for (const sp of specs) {
+    const got = picked.get(sp.dayIndex) ?? [];
+    for (const x of sp.slots) {
+      if (got.some((p) => p.slot === x.slot)) continue;
+      const list = spare.get(fam(x.slot)) ?? [];
+      const i = list.findIndex((l) => !taken.has(idKey(l.cand.entity_id)));
+      if (i < 0) continue;
+      const [{ cand, query }] = list.splice(i, 1);
+      taken.add(idKey(cand.entity_id));
+      got.push({ slot: x.slot, cand, query, alternates: list.filter((l) => !taken.has(idKey(l.cand.entity_id))).slice(0, 3).map((l) => l.cand) });
+      filled++;
+    }
+    got.sort((a, b) => SLOTS.indexOf(a.slot) - SLOTS.indexOf(b.slot));
+    picked.set(sp.dayIndex, got);
+  }
+  if (filled) emit({ type: "step", id: stepId(ctx), status: "ok", msg: `Filled ${filled} open slots with other Qloo candidates of the same kind` });
   const all = days.flatMap((_, i) => picked.get(i) ?? []);
   if (!all.length) throw new QlooError("empty", `Qloo returned no places for this taste in ${input.city}.`);
   const whys = await explainAll(all, input.seeds, ctx);
