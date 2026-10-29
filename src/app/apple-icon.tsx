@@ -6,14 +6,12 @@ export const contentType = "image/png";
 export default function AppleIcon() {
   return new ImageResponse(
     (
-      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#f7f3ec" }}>
-        <svg width="132" height="132" viewBox="0 0 32 32">
-          <path d="M16 1.5C8.8 1.5 3 7.1 3 14.1c0 9 11.3 16.6 12.1 17.1a1.6 1.6 0 0 0 1.8 0C17.7 30.7 29 23.1 29 14.1 29 7.1 23.2 1.5 16 1.5Z" fill="#e4572e" />
-          <circle cx="16" cy="14" r="8.4" fill="#1d1a16" />
-          <circle cx="16" cy="14" r="5.6" fill="none" stroke="#f7f3ec" strokeOpacity=".25" strokeWidth=".9" />
-          <path d="M10.3 10.6a6.8 6.8 0 0 1 4.3-3" fill="none" stroke="#f7f3ec" strokeOpacity=".75" strokeWidth="1.3" strokeLinecap="round" />
-          <circle cx="16" cy="14" r="2.6" fill="#f2a541" />
-          <circle cx="16" cy="14" r=".9" fill="#1d1a16" />
+      <div style={{ width: "100%", height: "100%", display: "flex", background: "#201117" }}>
+        <svg width="180" height="180" viewBox="0 0 32 32">
+          <rect x="3" y="3" width="26" height="12.6" rx="4" fill="#2f1a22" />
+          <rect x="3" y="16.4" width="26" height="12.6" rx="4" fill="#27151c" />
+          <path d="M3 16h26" stroke="#000" strokeOpacity=".7" />
+          <path d="M21.1 21.4 19.75 15.25l2.63-2.63C23.5 11.5 23.88 10 23.5 9.25c-.75-.38-2.25 0-3.38 1.13L17.5 13l-6.15-1.35c-.38-.08-.68.08-.83.38l-.22.38c-.15.37-.08.75.22.97L14.5 16.75 13 19h-2.25l-.75.75 2.25 1.5 1.5 2.25.75-.75V20.5l2.25-1.5 2.63 3.98c.22.3.6.37.97.22l.38-.15c.3-.23.45-.53.37-.9Z" fill="#ffb3c1" />
         </svg>
       </div>
     ),

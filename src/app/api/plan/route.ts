@@ -3,7 +3,7 @@ import { friendlyQlooError, QlooError } from "@/lib/qloo/client";
 import { rateLimit, tooMany } from "@/lib/ratelimit";
 import { PlanInputSchema, type PlanEvent } from "@/lib/types";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   const parsed = PlanInputSchema.safeParse(body);
   if (!parsed.success)
-    return Response.json({ error: "Pick a city, 1–3 days and 3–6 tastes from the suggestions." }, { status: 400 });
+    return Response.json({ error: "Pick a city, 1–30 days and 3–6 tastes from the suggestions." }, { status: 400 });
   const input = parsed.data;
   const enc = new TextEncoder();
   const stream = new ReadableStream({

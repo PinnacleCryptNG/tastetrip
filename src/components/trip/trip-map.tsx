@@ -5,7 +5,7 @@ import L from "leaflet";
 import { useEffect, useMemo } from "react";
 import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from "react-leaflet";
 import type { Stop } from "@/lib/types";
-import { SLOT_COLOR } from "./slot-style";
+import { SLOT_PIN } from "./slot-style";
 
 function Fit({ pts }: { pts: [number, number][] }) {
   const map = useMap();
@@ -24,7 +24,7 @@ export default function TripMap({ stops, activeId, onSelect }: { stops: Stop[]; 
   return (
     <MapContainer center={pts[0]} zoom={13} scrollWheelZoom={false} className="h-full w-full">
       <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      <Polyline positions={pts} pathOptions={{ color: "#1d1a16", weight: 2, opacity: 0.45, dashArray: "4 6" }} />
+      <Polyline positions={pts} pathOptions={{ color: "#1a0d12", weight: 2, opacity: 0.45, dashArray: "4 6" }} />
       {located.map(({ s, n }) => (
         <Marker
           key={s.entity_id}
@@ -35,7 +35,7 @@ export default function TripMap({ stops, activeId, onSelect }: { stops: Stop[]; 
             className: "",
             iconSize: [30, 30],
             iconAnchor: [4, 30],
-            html: `<div class="tt-pin" style="background:${SLOT_COLOR[s.slot]};${s.entity_id === activeId ? "outline:3px solid #1d1a16;" : ""}"><span>${n}</span></div>`,
+            html: `<div class="tt-pin" style="background:${SLOT_PIN[s.slot]};${s.entity_id === activeId ? "outline:3px solid #1a0d12;" : ""}"><span>${n}</span></div>`,
           })}
         >
           <Popup>

@@ -17,9 +17,9 @@ type Step = Extract<PlanEvent, { type: "step" }>;
 
 function Segmented<T extends string | number | undefined>({ value, options, onChange, label }: { value: T; options: { v: T; label: string }[]; onChange: (v: T) => void; label: string }) {
   return (
-    <div role="radiogroup" aria-label={label} className="flex rounded-2xl border border-input bg-background p-1">
+    <div role="radiogroup" aria-label={label} className="flex rounded-md border border-input bg-background p-1">
       {options.map((o) => (
-        <button key={String(o.v)} type="button" role="radio" aria-checked={o.v === value} onClick={() => onChange(o.v)} className={cn("h-10 flex-1 rounded-xl text-sm font-semibold transition", o.v === value ? "bg-foreground text-background shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+        <button key={String(o.v)} type="button" role="radio" aria-checked={o.v === value} onClick={() => onChange(o.v)} className={cn("h-10 flex-1 rounded-[5px] font-mono text-sm font-bold transition", o.v === value ? "bg-[var(--tt-ink)] text-[var(--tt-accent)]" : "text-muted-foreground hover:text-foreground")}>
           {o.label}
         </button>
       ))}
@@ -31,6 +31,7 @@ export function PlanApp() {
   const router = useRouter();
   const [city, setCity] = useState("");
   const [days, setDays] = useState(2);
+  const [custom, setCustom] = useState(false);
   const [budget, setBudget] = useState<number | undefined>(undefined);
   const [startDate, setStartDate] = useState("");
   const [seeds, setSeeds] = useState<TasteSeed[]>([]);
@@ -66,10 +67,13 @@ export function PlanApp() {
           return h ? { entity_id: h.entity_id, name: h.name, type: h.type } : null;
         }),
       );
-      setSeeds(found.filter((x): x is TasteSeed => !!x));
+      const picked = found.filter((x): x is TasteSeed => !!x);
+      setSeeds(picked);
       setCity(s.city);
       setDays(s.days);
+      setCustom(s.days > 3);
       setBudget(undefined);
+      if (picked.length >= 3) void plan({ city: s.city, days: s.days, seeds: picked });
     } catch (e) {
       setError({ msg: (e as Error).message, hint: (e as { hint?: string }).hint });
     } finally {
@@ -77,7 +81,8 @@ export function PlanApp() {
     }
   }
 
-  async function plan() {
+  async function plan(over?: { city: string; days: number; budget?: number; seeds: TasteSeed[] }) {
+    const req = over ?? { city, days, budget, seeds };
     setPhase("planning");
     setSteps([]);
     setError(null);
@@ -85,7 +90,7 @@ export function PlanApp() {
       const r = await fetch("/api/plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ city: city.trim(), days, budget, startDate: startDate || undefined, seeds }),
+        body: JSON.stringify({ city: req.city.trim(), days: req.days, budget: req.budget, startDate: startDate || undefined, seeds: req.seeds }),
       });
       if (!r.ok || !r.body) {
         const j = await r.json().catch(() => ({}));
@@ -122,34 +127,39 @@ export function PlanApp() {
     const finished = steps.filter((x) => x.status !== "run").length;
     return (
       <div ref={top} className="scroll-mt-4">
-        <section className="tt-card-shadow rounded-[1.75rem] border border-border bg-card p-5 sm:p-7">
-          <div className="flex items-center gap-4">
-            <span className="relative grid size-14 shrink-0 place-items-center">
-              {phase === "planning" && <span className="tt-ping absolute inset-2 rounded-full bg-primary/25" />}
-              <LogoMark className="relative size-14" spinning={phase === "planning"} />
+        <section className="overflow-hidden rounded-xl bg-[var(--tt-ink)] text-white shadow-[0_30px_80px_-30px_rgb(0_0_0/.6)]">
+          <div className="flex items-center gap-4 border-b border-white/10 p-5 sm:p-6">
+            <span className="relative grid size-12 shrink-0 place-items-center">
+              {phase === "planning" && <span className="tt-ping absolute inset-1 rounded-lg bg-[var(--tt-accent)]/30" />}
+              <LogoMark className="relative size-12" busy={phase === "planning"} />
             </span>
             <div className="min-w-0">
-              <h2 className="text-3xl leading-tight font-semibold">{phase === "planning" ? <>Planning <em className="text-primary">{city}</em></> : "That didn't work"}</h2>
-              <p className="text-sm text-muted-foreground">
-                {phase === "planning" ? `${finished} steps done · ${elapsed}s` : "No itinerary was made. TasteTrip only plans from Qloo results, so it won't guess."}
-              </p>
+              <div className="font-mono text-[10px] tracking-[0.18em] text-white/50 uppercase">{phase === "planning" ? "Now planning" : "Cancelled"}</div>
+              <h2 className="mt-1 truncate text-4xl text-[var(--tt-accent)]">{phase === "planning" ? city : "That didn't work"}</h2>
             </div>
+            {phase === "planning" && (
+              <div className="ml-auto text-right font-mono text-[11px] text-white/60">
+                <div className="text-2xl font-bold text-white tabular-nums">{elapsed}s</div>
+                {finished} done
+              </div>
+            )}
           </div>
           {phase === "planning" && (
-            <div className="mt-5 h-1 overflow-hidden rounded-full bg-muted">
-              <div className="h-full rounded-full bg-primary transition-all duration-700" style={{ width: `${Math.min(95, 6 + finished * 7)}%` }} />
+            <div className="h-1 bg-white/10">
+              <div className="h-full bg-[var(--tt-accent)] transition-all duration-700" style={{ width: `${Math.min(95, 6 + finished * 7)}%` }} />
             </div>
           )}
           {error && (
-            <div className="mt-5 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
-              <div className="font-semibold text-destructive">{error.msg}</div>
-              {error.hint && <div className="mt-1 text-muted-foreground">{error.hint}</div>}
-              <button type="button" onClick={() => setPhase("form")} className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-4 font-semibold hover:bg-muted">
+            <div className="m-5 rounded-md border border-[var(--tt-coral)]/40 bg-[var(--tt-coral)]/10 p-4 text-sm">
+              <div className="font-semibold text-[var(--tt-coral-2)]">{error.msg}</div>
+              {error.hint && <div className="mt-1 text-white/70">{error.hint}</div>}
+              <p className="mt-2 text-white/50">No itinerary was made. TasteTrip only plans from Qloo results, so it won&apos;t guess.</p>
+              <button type="button" onClick={() => setPhase("form")} className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-md bg-[var(--tt-accent)] px-4 font-bold text-[var(--tt-ink)]">
                 <ArrowLeft className="size-4" /> Edit and retry
               </button>
             </div>
           )}
-          <div className="mt-5">
+          <div className="p-3 sm:p-5">
             <ProgressLog steps={steps} />
           </div>
         </section>
@@ -157,75 +167,102 @@ export function PlanApp() {
     );
   }
 
+  const need = seeds.length < 3 ? `Pick ${3 - seeds.length} more thing${3 - seeds.length > 1 ? "s" : ""} you love` : "Add a destination";
   return (
     <form
-      className="tt-card-shadow space-y-7 rounded-[1.75rem] border border-border bg-card p-5 sm:p-7"
+      className="rounded-xl border border-border bg-card shadow-[0_24px_60px_-30px_rgb(11_13_23/.35)]"
       onSubmit={(e) => {
         e.preventDefault();
         if (ready) plan();
       }}
     >
-      <div>
-        <div className="text-sm font-semibold">Short on time? Try a sample</div>
-        <div className="-mx-5 mt-3 flex snap-x gap-3 overflow-x-auto px-5 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0">
-          {SAMPLES.map((s) => (
-            <button key={s.label} type="button" disabled={!!loadingSample} onClick={() => loadSample(s)} className="group w-[15rem] shrink-0 snap-start rounded-2xl border border-border bg-background p-4 text-left transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md disabled:opacity-60 sm:w-auto">
-              <div className="flex items-center justify-between">
-                <span className="font-heading text-xl font-semibold">{s.city}</span>
-                {loadingSample === s.label ? <LoaderCircle className="size-4 animate-spin text-primary" /> : <ArrowRight className="size-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />}
+      <div className="flex items-center justify-between rounded-t-[11px] bg-[var(--tt-ink)] px-5 py-3 font-mono text-[11px] tracking-[0.18em] text-white/70 uppercase sm:px-7">
+        <span>Boarding pass</span>
+        <span className="text-[var(--tt-accent)]">No login</span>
+      </div>
+      <div className="space-y-7 p-5 sm:p-7">
+        <div>
+          <div className="font-mono text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Popular routes · one tap</div>
+          <div className="-mx-5 mt-3 flex snap-x gap-3 overflow-x-auto px-5 pb-1 [clip-path:inset(0)] sm:[clip-path:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0">
+            {SAMPLES.map((s) => (
+              <button key={s.label} type="button" disabled={!!loadingSample} onClick={() => loadSample(s)} className="group w-[14.5rem] shrink-0 snap-start overflow-hidden rounded-lg border border-border bg-background text-left transition hover:-translate-y-0.5 hover:border-primary hover:shadow-lg disabled:opacity-60 sm:w-auto">
+                <div className="flex items-center justify-between bg-[var(--tt-primary)] px-3.5 py-2 text-white">
+                  <span className="font-heading text-2xl leading-none font-extrabold uppercase">{s.city}</span>
+                  {loadingSample === s.label ? <LoaderCircle className="size-4 animate-spin" /> : <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />}
+                </div>
+                <ul className="space-y-1 px-3.5 py-3">
+                  {s.seeds.map((x) => (
+                    <li key={x.query} className="flex items-center gap-1.5 truncate text-xs font-medium">
+                      <TypeIcon type={x.type} className="size-3 shrink-0 text-primary" /> {x.query}
+                    </li>
+                  ))}
+                </ul>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="tt-dash-x" />
+        <div>
+          <label htmlFor="city" className="font-mono text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Destination</label>
+          <input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Kyoto, Cape Town, Buenos Aires…" autoComplete="off" className="mt-2 h-12 w-full rounded-md border border-input bg-background px-4 text-[15px] font-semibold outline-none transition placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/15 font-heading text-2xl uppercase placeholder:font-sans placeholder:text-[15px] placeholder:normal-case" />
+        </div>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <div>
+            <div className="font-mono text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Duration</div>
+            <div className="mt-2">
+              <Segmented
+                label="Days"
+                value={custom ? 0 : days}
+                onChange={(v) => (v === 0 ? (setCustom(true), setDays((d) => (d > 3 ? d : 5))) : (setCustom(false), setDays(v)))}
+                options={[...[1, 2, 3].map((v) => ({ v, label: `${v} day${v > 1 ? "s" : ""}` })), { v: 0, label: "Custom" }]}
+              />
+            </div>
+            {custom && (
+              <div className="mt-2 rounded-md border border-input bg-background p-2">
+                <div className="flex items-center gap-2">
+                  <button type="button" aria-label="One day fewer" onClick={() => setDays((d) => Math.max(1, d - 1))} className="grid size-9 shrink-0 place-items-center rounded-[5px] bg-[var(--tt-ink)] font-mono text-lg font-bold text-[var(--tt-accent)]">−</button>
+                  <input type="range" min={1} max={30} value={days} onChange={(e) => setDays(+e.target.value)} aria-label="Trip length in days" className="h-9 min-w-0 flex-1 accent-[var(--tt-primary)]" />
+                  <button type="button" aria-label="One day more" onClick={() => setDays((d) => Math.min(30, d + 1))} className="grid size-9 shrink-0 place-items-center rounded-[5px] bg-[var(--tt-ink)] font-mono text-lg font-bold text-[var(--tt-accent)]">+</button>
+                  <output className="w-[4.5rem] shrink-0 text-right font-heading text-2xl leading-none font-extrabold uppercase">{days}<span className="ml-1 font-mono text-[10px] tracking-[0.1em] text-muted-foreground">{days > 1 ? "days" : "day"}</span></output>
+                </div>
+                <p className="mt-1.5 px-1 font-mono text-[10px] tracking-[0.06em] text-muted-foreground">Up to 30 days.{days > 7 ? " Long trips take a minute or two to plan." : ""}</p>
               </div>
-              <ul className="mt-2 space-y-1">
-                {s.seeds.map((x) => (
-                  <li key={x.query} className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
-                    <TypeIcon type={x.type} className="size-3 shrink-0 text-primary" /> {x.query}
-                  </li>
-                ))}
-              </ul>
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="border-t border-border pt-6">
-        <label htmlFor="city" className="text-sm font-bold">Where are you going?</label>
-        <input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Lisbon, Tokyo, Lagos…" autoComplete="off" className="mt-2 h-12 w-full rounded-2xl border border-input bg-background px-4 text-[15px] outline-none transition placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/12" />
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <div className="text-sm font-bold">How long?</div>
-          <div className="mt-2">
-            <Segmented label="Days" value={days} onChange={setDays} options={[1, 2, 3].map((v) => ({ v, label: `${v} day${v > 1 ? "s" : ""}` }))} />
+            )}
+          </div>
+          <div>
+            <div className="font-mono text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Class <span className="normal-case tracking-normal font-normal">· food &amp; drink budget</span></div>
+            <div className="mt-2">
+              <Segmented label="Budget" value={budget} onChange={setBudget} options={[{ v: undefined, label: "Any" }, { v: 1, label: "$" }, { v: 2, label: "$$" }, { v: 3, label: "$$$" }]} />
+            </div>
           </div>
         </div>
         <div>
-          <div className="text-sm font-bold">Budget <span className="font-normal text-muted-foreground">(food &amp; drinks)</span></div>
+          <label htmlFor="date" className="font-mono text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Departs <span className="normal-case tracking-normal font-normal">· optional, picks places open that day</span></label>
+          <input id="date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="mt-2 block h-12 w-full rounded-md border border-input bg-background px-4 text-[15px] font-semibold outline-none transition placeholder:font-normal placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/15 font-mono sm:w-60" />
+        </div>
+        <div>
+          <div className="flex items-baseline justify-between">
+            <div className="font-mono text-[11px] font-bold tracking-[0.16em] text-muted-foreground uppercase">Passenger tastes</div>
+            <div className="font-mono text-[11px] text-muted-foreground">{seeds.length}/6 · min 3</div>
+          </div>
           <div className="mt-2">
-            <Segmented label="Budget" value={budget} onChange={setBudget} options={[{ v: undefined, label: "Any" }, { v: 1, label: "$" }, { v: 2, label: "$$" }, { v: 3, label: "$$$" }]} />
+            <TasteInput seeds={seeds} onChange={setSeeds} />
           </div>
         </div>
+        {error && (
+          <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm">
+            <div className="font-semibold text-destructive">{error.msg}</div>
+            {error.hint && <div className="mt-0.5 text-muted-foreground">{error.hint}</div>}
+          </div>
+        )}
       </div>
-      <div>
-        <label htmlFor="date" className="text-sm font-bold">Start date <span className="font-normal text-muted-foreground">(optional, picks places open that day)</span></label>
-        <input id="date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="mt-2 block h-12 w-full rounded-2xl border border-input bg-background px-4 text-[15px] outline-none transition placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/12 sm:w-60" />
+      <div className="tt-perf-x -mt-1.5 bg-transparent" />
+      <div className="rounded-b-[11px] bg-secondary p-5 sm:p-7">
+        <button type="submit" disabled={!ready} className="group inline-flex h-14 w-full items-center justify-center gap-2 rounded-md bg-[var(--tt-accent)] text-base font-bold text-[var(--tt-ink)] shadow-[0_6px_0_var(--tt-accent-deep)] transition active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:bg-[var(--tt-paper-3)] disabled:text-muted-foreground disabled:shadow-none">
+          {ready ? "Plan my trip" : need}
+          {ready && <ArrowRight className="size-5 transition group-hover:translate-x-0.5" />}
+        </button>
       </div>
-      <div>
-        <div className="flex items-baseline justify-between">
-          <div className="text-sm font-bold">Things you love</div>
-          <div className="text-xs text-muted-foreground">{seeds.length}/6 · pick at least 3</div>
-        </div>
-        <div className="mt-2">
-          <TasteInput seeds={seeds} onChange={setSeeds} />
-        </div>
-      </div>
-      {error && (
-        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-3 text-sm">
-          <div className="font-semibold text-destructive">{error.msg}</div>
-          {error.hint && <div className="mt-0.5 text-muted-foreground">{error.hint}</div>}
-        </div>
-      )}
-      <button type="submit" disabled={!ready} className="group inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-primary text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:bg-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none">
-        {ready ? "Plan my trip" : seeds.length < 3 ? `Pick ${3 - seeds.length} more thing${3 - seeds.length > 1 ? "s" : ""} you love` : "Add a city"}
-        {ready && <ArrowRight className="size-5 transition group-hover:translate-x-0.5" />}
-      </button>
     </form>
   );
 }

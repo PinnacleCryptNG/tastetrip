@@ -118,7 +118,7 @@ export function friendlyQlooError(e: unknown, city?: string): { msg: string; hin
     case "city_not_found":
       return {
         msg: `Qloo couldn't find a city called "${city ?? ""}".`,
-        hint: "Try the full name, e.g. \"Lisbon\" or \"Lagos, Nigeria\".",
+        hint: "Try the full name, e.g. \"Kyoto\" or \"Cape Town, South Africa\".",
         status: 400,
       };
     case "bad_request":

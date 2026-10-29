@@ -1,27 +1,26 @@
 import { cn } from "@/lib/utils";
 
-export function LogoMark({ className, spinning }: { className?: string; spinning?: boolean }) {
+export function LogoMark({ className, busy }: { className?: string; busy?: boolean }) {
   return (
-    <svg viewBox="0 0 32 32" className={cn(spinning && "tt-spinning", className)} aria-hidden>
-      <path d="M16 1.5C8.8 1.5 3 7.1 3 14.1c0 9 11.3 16.6 12.1 17.1a1.6 1.6 0 0 0 1.8 0C17.7 30.7 29 23.1 29 14.1 29 7.1 23.2 1.5 16 1.5Z" fill="#e4572e" />
-      <circle cx="16" cy="14" r="8.4" fill="#1d1a16" />
-      <g className="tt-rec">
-        <circle cx="16" cy="14" r="6.3" fill="none" stroke="#f7f3ec" strokeOpacity=".2" strokeWidth=".7" />
-        <circle cx="16" cy="14" r="4.5" fill="none" stroke="#f7f3ec" strokeOpacity=".2" strokeWidth=".7" />
-        <path d="M10.3 10.6a6.8 6.8 0 0 1 4.3-3" fill="none" stroke="#f7f3ec" strokeOpacity=".7" strokeWidth="1.1" strokeLinecap="round" />
-        <circle cx="16" cy="14" r="2.4" fill="#f2a541" />
-        <circle cx="16" cy="14" r=".8" fill="#1d1a16" />
-      </g>
+    <svg viewBox="0 0 32 32" className={cn("tt-flapmark", busy && "tt-busy", className)} aria-hidden>
+      <rect width="32" height="32" rx="7" fill="var(--tt-board)" />
+      <rect className="tt-top" x="3" y="3" width="26" height="12.6" rx="4" fill="var(--tt-board-5)" />
+      <rect x="3" y="16.4" width="26" height="12.6" rx="4" fill="var(--tt-board-3)" />
+      <path d="M3 16h26" stroke="#000" strokeOpacity=".7" />
+      <path
+        d="M21.1 21.4 19.75 15.25l2.63-2.63C23.5 11.5 23.88 10 23.5 9.25c-.75-.38-2.25 0-3.38 1.13L17.5 13l-6.15-1.35c-.38-.08-.68.08-.83.38l-.22.38c-.15.37-.08.75.22.97L14.5 16.75 13 19h-2.25l-.75.75 2.25 1.5 1.5 2.25.75-.75V20.5l2.25-1.5 2.63 3.98c.22.3.6.37.97.22l.38-.15c.3-.23.45-.53.37-.9Z"
+        fill="var(--tt-accent)"
+      />
     </svg>
   );
 }
 
-export function Logo({ className }: { className?: string }) {
+export function Logo({ className, tone = "ink" }: { className?: string; tone?: "ink" | "light" }) {
   return (
-    <span className={cn("group inline-flex items-center gap-2", className)}>
+    <span className={cn("group inline-flex items-center gap-2.5", className)}>
       <LogoMark className="size-8" />
-      <span className="font-heading text-[1.4rem] leading-none font-semibold tracking-[-0.03em]">
-        Taste<em className="text-primary">Trip</em>
+      <span className={cn("font-heading text-[1.55rem] leading-none font-extrabold tracking-[0.02em] uppercase", tone === "light" ? "text-white" : "text-foreground")}>
+        Taste<span className={tone === "light" ? "text-[var(--tt-accent)]" : "text-primary"}>Trip</span>
       </span>
     </span>
   );

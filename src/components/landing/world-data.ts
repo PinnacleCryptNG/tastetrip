@@ -1,0 +1,3 @@
+// Generated with dotted-map; coordinates match /public/world.svg.
+export const WORLD = { w: 140, h: 71 } as const;
+export const PINS: Record<string, [number, number]> = {"Lagos":[70.5,39.84],"Lisbon":[66,25.11],"Tokyo":[127,26.85],"New York":[39,23.38],"Paris":[70.5,19.05],"Seoul":[122,25.11],"Mexico City":[28,33.77],"Cape Town":[77.5,57.16],"London":[69.5,17.32],"São Paulo":[50.5,51.96],"Sydney":[132.5,57.16],"Mumbai":[100,33.77],"Reykjavik":[60,7.79],"Buenos Aires":[45.5,57.16],"Marrakech":[66,28.58],"Istanbul":[81,23.38],"Nairobi":[85,42.44],"Bangkok":[111.5,36.37],"Los Angeles":[21,26.85],"Vancouver":[18.5,19.05],"Lima":[37.5,46.77],"Auckland":[142,58.02],"Dubai":[92.5,31.18],"Berlin":[75,16.45],"Kyoto":[126,26.85]};

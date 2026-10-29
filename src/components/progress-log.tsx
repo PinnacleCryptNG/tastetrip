@@ -1,35 +1,40 @@
 "use client";
 
-import { Check, LoaderCircle, TriangleAlert } from "lucide-react";
 import type { PlanEvent } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type Step = Extract<PlanEvent, { type: "step" }>;
 
 const toolLabel: Record<string, string> = {
-  "qloo.find_tags": "Qloo /v2/tags",
-  "qloo.recommend_places": "Qloo /v2/insights",
-  "llm.plan_slots": "Planner LLM",
-  "llm.arrange": "Planner LLM",
-  "llm.explain": "Planner LLM",
-  validator: "Validator",
+  "qloo.find_tags": "QLOO /V2/TAGS",
+  "qloo.recommend_places": "QLOO /V2/INSIGHTS",
+  "llm.plan_slots": "PLANNER",
+  "llm.arrange": "PLANNER",
+  "llm.explain": "PLANNER",
+  validator: "VALIDATOR",
 };
+const status = {
+  run: { label: "Boarding", cls: "text-[var(--tt-accent)] tt-blink" },
+  ok: { label: "Landed", cls: "text-[var(--tt-mint)]" },
+  warn: { label: "Delayed", cls: "text-[var(--tt-coral)]" },
+} as const;
 
 export function ProgressLog({ steps }: { steps: Step[] }) {
   return (
-    <ol className="space-y-2" aria-live="polite">
-      {steps.map((s) => (
-        <li key={s.id} className="flex gap-3 rounded-2xl border border-border bg-background px-3.5 py-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
-          <span className={cn("mt-0.5 grid size-6 shrink-0 place-items-center rounded-full", s.status === "run" ? "bg-secondary" : s.status === "ok" ? "bg-accent/10 text-accent" : "bg-amber-100 text-amber-700")}>
-            {s.status === "run" ? <LoaderCircle className="size-3.5 animate-spin" /> : s.status === "ok" ? <Check className="size-3.5" /> : <TriangleAlert className="size-3.5" />}
-          </span>
-          <div className="min-w-0 flex-1">
-            {s.tool && <div className="font-mono text-[11px] text-primary">{toolLabel[s.tool] ?? s.tool}</div>}
-            <div className="text-sm font-medium">{s.msg}</div>
-            {s.detail && <div className="mt-1 font-mono text-[11px] leading-relaxed break-all whitespace-pre-line text-muted-foreground">{s.detail}</div>}
-          </div>
-        </li>
-      ))}
+    <ol className="divide-y divide-white/8" aria-live="polite">
+      {steps.map((s) => {
+        const st = status[s.status as keyof typeof status] ?? status.ok;
+        return (
+          <li key={s.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 px-2 py-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="min-w-0">
+              {s.tool && <div className="font-mono text-[10px] font-bold tracking-[0.14em] text-[var(--tt-sky)]">{toolLabel[s.tool] ?? s.tool.toUpperCase()}</div>}
+              <div className="text-sm font-medium text-white">{s.msg}</div>
+              {s.detail && <div className="mt-1 font-mono text-[11px] leading-relaxed break-all whitespace-pre-line text-white/45">{s.detail}</div>}
+            </div>
+            <span className={cn("self-start pt-0.5 font-mono text-[10px] font-bold tracking-[0.14em] uppercase", st.cls)}>{st.label}</span>
+          </li>
+        );
+      })}
     </ol>
   );
 }
