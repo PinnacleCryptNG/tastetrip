@@ -88,7 +88,7 @@ type DaySpec = { theme: string; weekday?: string; slots: { slot: Slot; query: st
 
 async function planSlots(input: PlanInput, ctx: Ctx): Promise<DaySpec[]> {
   const id = stepId(ctx);
-  ctx.emit({ type: "step", id, tool: "llm.plan_slots", status: "run", msg: `Planning ${input.days} day${input.days > 1 ? "s" : ""} of slots for your taste…` });
+  ctx.emit({ type: "step", id, tool: "llm.plan_slots", status: "run", msg: `Planning ${input.days} day${input.days > 1 ? "s" : ""} of slots${input.seeds.length ? " for your taste" : ""}…` });
   const n = Math.min(input.days, MAX_TEMPLATES);
   const long = input.days > n;
   let templates: DaySpec[];
@@ -99,7 +99,7 @@ async function planSlots(input: PlanInput, ctx: Ctx): Promise<DaySpec[]> {
       DayPlanSchema,
       `You plan the shape of a taste-matched city itinerary. For each day give a short theme (max 6 words) and 4-5 time slots chosen from: ${SLOTS.join(", ")} (chronological, each slot at most once per day).
 For each slot give "query": ONE short generic English place category that a tag search can match, e.g. cafe, bakery, brunch, museum, art gallery, park, garden, bookstore, record store, market, vintage, cinema, theater, restaurant, seafood, vegetarian, ramen, tapas, jazz club, live music venue, cocktail bar, wine bar, nightclub, rooftop bar.
-Pick categories the given tastes plausibly enjoy, vary them across days, and use a food category for breakfast/lunch/dinner. Never name specific venues.
+Pick categories the given tastes plausibly enjoy, vary them across days, and use a food category for breakfast/lunch/dinner. Never name specific venues.${input.seeds.length ? "" : " No tastes were given: pick a varied mix of the city's best-loved categories for a curious first-time visitor."}
 Return exactly day_templates entries in "days"${long ? ` (they repeat across the ${input.days}-day trip, so make them clearly different from each other), plus "themes": exactly trip_length_days distinct short day themes (max 6 words each) that suit the city and tastes` : ""}, in this shape:
 {"days":[{"theme":"Street style and soul food","slots":[{"slot":"morning","query":"vintage"},{"slot":"lunch","query":"ramen"}]}]${long ? ',"themes":["Street style and soul food","Old town and wine bars"]' : ""}}`,
       JSON.stringify({ city: input.city, trip_length_days: input.days, day_templates: n, budget_max_price_level: input.budget ?? null, tastes: input.seeds.map((s) => ({ name: s.name, type: s.type })) }),
@@ -172,7 +172,7 @@ async function fetchPools(
   const run = async (w: (typeof wanted)[number]) => {
     const id = stepId(ctx);
     const what = w.query.tagName ?? w.query.label;
-    ctx.emit({ type: "step", id, tool: "qloo.recommend_places", status: "run", msg: `Searching Qloo for ${what} in ${city} matched to ${seedLabel(seeds)}${w.query.weekday ? ` (open ${w.query.weekday})` : ""}…` });
+    ctx.emit({ type: "step", id, tool: "qloo.recommend_places", status: "run", msg: `Searching Qloo for ${what} in ${city}${seeds.length ? ` matched to ${seedLabel(seeds)}` : ""}${w.query.weekday ? ` (open ${w.query.weekday})` : ""}…` });
     const base = { seedIds: seeds.map((s) => s.entity_id), city, tagId: w.query.tagId, weekday: w.query.weekday, priceMax: w.priceMax, exclude, take };
     const res = await recommendPlaces(base);
     ctx.qloo += res.calls;
@@ -192,7 +192,7 @@ async function fetchPools(
       id,
       tool: "qloo.recommend_places",
       status: res.places.length ? "ok" : "warn",
-      msg: res.places.length ? `${res.places.length} ${what} places${top ? ` · top: ${top.name}${top.affinity != null ? ` (${Math.round(top.affinity * 100)}%)` : ""}` : ""}` : `No ${what} places found`,
+      msg: res.places.length ? `${res.places.length} ${what} places${top ? ` · top: ${top.name}${seeds.length && top.affinity != null ? ` (${Math.round(top.affinity * 100)}%)` : ""}` : ""}` : `No ${what} places found`,
       detail: `GET /v2/insights · filter.type=urn:entity:place${w.query.tagId ? ` · filter.tags=${w.query.tagId}` : ""}${w.query.weekday ? ` · filter.hours=${w.query.weekday}` : ""}${w.priceMax ? ` · filter.price_level.max=${w.priceMax}` : ""}${exclude.length ? ` · filter.exclude.entities=${exclude.length}` : ""} · feature.explainability=true${res.relaxed ? " · relaxed quality/popularity" : ""}${res.cached ? " · cached" : ""}`,
     });
   };
@@ -308,7 +308,11 @@ function explainFor(c: Candidate, seeds: TasteSeed[]) {
     .filter((x): x is NonNullable<typeof x> => x !== null);
 }
 
-function templateWhy(c: Candidate, ex: ReturnType<typeof explainFor>) {
+function templateWhy(c: Candidate, ex: ReturnType<typeof explainFor>, category?: string) {
+  if (!ex.length && c.affinity == null) {
+    const tags = c.tags.slice(0, 3).map((t) => t.name.toLowerCase());
+    return `A well-loved ${(category ?? "spot").toLowerCase()} in Qloo's place graph${tags.length ? `, tagged ${tags.join(", ")}` : ""}.`;
+  }
   const pct = c.affinity != null ? `${Math.round(c.affinity * 100)}% Qloo affinity` : "a strong Qloo match";
   const drivers = ex.filter((e) => e.score >= 0.1).slice(0, 2).map((e) => e.seed_name);
   const tags = c.tags.slice(0, 2).map((t) => t.name.toLowerCase());
@@ -327,17 +331,21 @@ async function explainAll(picks: Picked[], seeds: TasteSeed[], ctx: Ctx): Promis
 async function explain(picks: Picked[], seeds: TasteSeed[], ctx: Ctx, label?: string): Promise<Map<string, string>> {
   const id = stepId(ctx);
   const tag = label ? ` (${label})` : "";
-  ctx.emit({ type: "step", id, tool: "llm.explain", status: "run", msg: `Writing “why this fits you” from Qloo explainability${tag}…` });
+  ctx.emit({ type: "step", id, tool: "llm.explain", status: "run", msg: seeds.length ? `Writing “why this fits you” from Qloo explainability${tag}…` : `Writing short notes from Qloo's tags${tag}…` });
   const items = picks.map((p, i) => ({ p, a: `s${i + 1}`, ex: explainFor(p.cand, seeds) }));
   const out = new Map<string, string>();
   try {
     ctx.llm++;
     const res = await llmJson(
       WhySchema,
-      `Write one short "why this fits you" line (18-30 words) per stop, addressed to the traveller ("you"). Name the top taste driver(s) from explain and weave in one or two of the stop's tags so each line is specific.
+      seeds.length
+        ? `Write one short "why this fits you" line (18-30 words) per stop, addressed to the traveller ("you"). Name the top taste driver(s) from explain and weave in one or two of the stop's tags so each line is specific.
 Ground it ONLY in the given fields: name, slot, tags, Qloo affinity, and explain (which of the traveller's tastes drove Qloo's match, with 0-1 scores).
 Mention only taste names that appear in that stop's explain list (the highest-scoring first). Do not invent dishes, history, awards or facts not in the tags.
 Phrase affinity as aggregate ("fans of X tend to love…"), never as a fact about the person.
+Output {"items":[{"id":"s1","why":"..."}]}.`
+        : `Write one short "why go" line (14-26 words) per stop, addressed to the traveller ("you"), saying what the place offers at that time of day. Vary the openings; don't start every line the same way.
+Ground it ONLY in the given fields: name, slot, category and tags. Do not invent dishes, history, awards or facts not in the tags. Do not mention tastes, fans or match scores.
 Output {"items":[{"id":"s1","why":"..."}]}.`,
       JSON.stringify(
         items.map(({ p, a, ex }) => ({
@@ -346,7 +354,7 @@ Output {"items":[{"id":"s1","why":"..."}]}.`,
           slot: p.slot,
           category: p.query.tagName ?? p.query.label,
           tags: p.cand.tags.slice(0, 8).map((t) => t.name),
-          affinity: p.cand.affinity != null ? Math.round(p.cand.affinity * 100) : null,
+          affinity: seeds.length && p.cand.affinity != null ? Math.round(p.cand.affinity * 100) : null,
           explain: ex.slice(0, 3).map((e) => ({ taste: e.seed_name, score: +e.score.toFixed(2) })),
         })),
       ),
@@ -363,7 +371,7 @@ Output {"items":[{"id":"s1","why":"..."}]}.`,
     const allowed = new Set(ex.filter((e) => e.score >= 0.05).map((e) => e.seed_name.toLowerCase()));
     const mentionsUngrounded = why && seeds.some((s) => !allowed.has(s.name.toLowerCase()) && why!.toLowerCase().includes(s.name.toLowerCase()));
     if (!why || (ex.length > 0 && mentionsUngrounded)) {
-      why = templateWhy(p.cand, ex);
+      why = templateWhy(seeds.length ? p.cand : { ...p.cand, affinity: undefined }, ex, p.query.tagName ?? p.query.label);
       templated++;
     }
     result.set(p.cand.entity_id, why);
@@ -383,7 +391,7 @@ function toStop(p: Picked, seeds: TasteSeed[], why: string): Stop {
     lat: c.lat,
     lon: c.lon,
     tags: c.tags.slice(0, 6).map((t) => t.name),
-    affinity: c.affinity,
+    affinity: seeds.length ? c.affinity : undefined,
     price_level: c.price_level,
     rating: c.rating,
     website: c.website,
@@ -402,7 +410,7 @@ function slotQuery(slot: Slot, query: string, tags: Map<string, FoundTag | null>
 // ---------- public: plan / swap / regenerate ----------
 export async function planTrip(input: PlanInput, emit: Emit): Promise<{ trip: Trip; editKey: string }> {
   const ctx: Ctx = { emit, qloo: 0, llm: 0, rejected: 0, step: 0 };
-  emit({ type: "step", id: stepId(ctx), status: "ok", msg: `Taste: ${input.seeds.map((s) => `${s.name} (${s.type})`).join(", ")}`, detail: "Resolved via Qloo /search autocomplete" });
+  emit({ type: "step", id: stepId(ctx), status: "ok", msg: input.seeds.length ? `Taste: ${input.seeds.map((s) => `${s.name} (${s.type})`).join(", ")}` : "No tastes picked: planning Qloo's best-loved spots", detail: input.seeds.length ? "Resolved via Qloo /search autocomplete" : undefined });
 
   const days = await planSlots(input, ctx);
   const queries = days.flatMap((d) => d.slots.map((s) => s.query));

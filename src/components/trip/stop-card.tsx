@@ -51,7 +51,7 @@ export function StopCard({
         </div>
 
         <div className="mt-3 rounded-md bg-secondary p-3.5">
-          <div className="font-mono text-[10px] font-bold tracking-[0.16em] uppercase">Why this fits you</div>
+          <div className="font-mono text-[10px] font-bold tracking-[0.16em] uppercase">{stop.explain.length ? "Why this fits you" : "Why go"}</div>
           <p className="mt-1 text-sm leading-relaxed">{stop.why}</p>
           {bars.length > 0 && (
             <ul className="mt-3 space-y-1.5">

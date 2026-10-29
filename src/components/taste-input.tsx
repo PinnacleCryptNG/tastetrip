@@ -96,7 +96,7 @@ export function TasteInput({ seeds, onChange, max = 6 }: { seeds: TasteSeed[]; o
             }
             else if (e.key === "Escape") setOpen(false);
           }}
-          placeholder={full ? `That's ${max} — perfect.` : "An artist, film, show, book or brand you love…"}
+          placeholder={full ? `That's ${max} — perfect.` : "Artist, film, book or brand…"}
           className="h-12 w-full rounded-md border border-input bg-background pr-10 pl-10 text-[15px] outline-none transition placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/15 disabled:opacity-60"
           role="combobox"
           aria-expanded={open && hits.length > 0}
